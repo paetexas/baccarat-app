@@ -21,12 +21,13 @@ st.markdown("""
         background: linear-gradient(145deg, #161B22, #1A1F2C);
         border: 2px solid #FFD700;
         border-radius: 14px;
-        padding: 18px;
+        padding: 20px;
         margin-top: 30px;
         margin-bottom: 15px;
         box-shadow: 0px 4px 15px rgba(255, 215, 0, 0.15);
     }
-    .pinned-guide h4 { color: #FFD700; margin-top: 0; margin-bottom: 10px; font-weight: 900; }
+    .pinned-guide h3 { color: #FFD700; margin-top: 0; margin-bottom: 12px; font-weight: 900; border-bottom: 1px solid #2D3748; padding-bottom: 8px; }
+    .pinned-guide h4 { color: #00E676; margin-top: 15px; margin-bottom: 5px; font-weight: 800; }
     .warning-banner {
         background: rgba(255, 61, 0, 0.12); border: 1px solid #FFD700; color: #FF8A65;
         text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px;
@@ -422,15 +423,29 @@ st.markdown("### ประวัติการเข้าไม้ตาต่
 if detailed_logs:
     st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
 
-# ---------------- PINNED GUIDE AT THE BOTTOM ----------------
+# ---------------- PINNED DETAILED GUIDE AT THE BOTTOM ----------------
 st.markdown("""
 <div class="pinned-guide">
-    <h4>คู่มือการใช้งานระบบ [BAR Rich BAR Pro Elite]</h4>
-    <ol style="margin: 0; padding-left: 20px; line-height: 1.6; font-size: 14px;">
-        <li><b>บันทึกผลจริง:</b> กดปุ่ม <b>PLAYER ชนะ</b> หรือ <b>BANKER ชนะ</b> ทันทีเมื่อทราบผล ระบบจะบันทึกและประมวลผลให้อัตโนมัติ</li>
-        <li><b>นับไพ่เสริมความแม่นยำ:</b> สามารถจิ้มเลือกหน้าไพ่ที่เปิดบนโต๊ะด้านบนเพื่อช่วยคำนวณความน่าจะเป็นเพิ่มเติมได้</li>
-        <li><b>ลุยตามสัญญาณ AI:</b> รอสัญญาณฟันธงและทำตามสถานะการเดินเงินที่ระบบแนะนำเพื่อทำกำไร</li>
-    </ol>
+    <h3>📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Sniper V2]</h3>
+    
+    <h4>1. การเลือกโหมดการยิง (Sniper Settings)</h4>
+    <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.5;">
+        <li><b>โหมดมาตรฐาน (เกณฑ์ 57%+):</b> เหมาะสำหรับการเล่นปกติ ให้ความสมดุลระหว่างความถี่ในการออกไม้และความแม่นยำ</li>
+        <li><b>โหมดซุปเปอร์บู๊ (เกณฑ์ 52%+):</b> เหมาะสำหรับคนชอบออกไม้ยับๆ ทำรอบไว ออกสัญญาณถี่ขึ้น</li>
+        <li><b>โหมดสไนเปอร์ (เกณฑ์ 62%+):</b> เน้นความชัวร์ระดับพรีเมียม กรองความเสี่ยงสูง ออกไม้ยากแต่แม่นยำสูงมาก</li>
+    </ul>
+
+    <h4>2. ระบบนับไพ่ Hi-Lo & Point Spread</h4>
+    <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.5;">
+        <li>เมื่อเปิดไพ่บนโต๊ะ ให้จิ้มเลือกหน้าไพ่ที่ออก (เช่น 10/J/Q/K หรือ A) ระบบจะนำไปคำนวณค่า True Count แบบเรียลไทม์เพื่อปรับค่าความน่าจะเป็นของขอนไพ่นั้นๆ</li>
+    </ul>
+
+    <h4>3. การบันทึกผล & การใช้งานระบบเดินเงิน</h4>
+    <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.5;">
+        <li>กดปุ่ม <b>PLAYER ชนะ</b> หรือ <b>BANKER ชนะ</b> ตามผลจริง เพื่อให้ระบบคำนวณสัญญานตาถัดไป</li>
+        <li>ดูสถานะเดินเงิน <b>[ ไม้ที่ 1 ถึง ไม้ที่ 4 ]</b> เพื่อคุมทุนตามระบบพับทบ (Martingale) หากชนะจะรีเซ็ตกลับไม้ 1 อัตโนมัติ</li>
+        <li>สามารถกด <b>"บันทึกขอน"</b> เมื่อจบขอน เพื่อเก็บบันทึกสถิติภาพรวมสะสมไว้ดูย้อนหลังได้</li>
+    </ul>
 </div>
 """, unsafe_allow_html=True)
 
