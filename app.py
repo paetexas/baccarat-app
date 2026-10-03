@@ -5,7 +5,7 @@ import pandas as pd
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="BAR Rich BAR Pro Elite", layout="centered", initial_sidebar_state="collapsed")
 
-# Custom CSS ตกแต่ง UI Neon Dark Theme หรูหรา ดุดัน
+# Custom CSS ตกแต่ง UI Neon Dark Theme ดุดัน สไตล์ Sniper
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
@@ -19,15 +19,32 @@ st.markdown("""
     .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
     .step-badge { background: linear-gradient(135deg, #1A1F2C, #252D3D); border: 2px solid #FF3D00; border-radius: 14px; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; color: #FF3D00; margin-bottom: 15px; }
     .kelly-card { background: #1E222D; border-left: 5px solid #FFD700; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; }
+    
+    @keyframes flash-border {
+        0% { border-color: #FF3D00; box-shadow: 0 0 10px rgba(255, 61, 0, 0.5); }
+        50% { border-color: #FFD700; box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); }
+        100% { border-color: #FF3D00; box-shadow: 0 0 10px rgba(255, 61, 0, 0.5); }
+    }
+    .flash-alert {
+        background: linear-gradient(135deg, #2A1510, #1E1E2D);
+        border: 3px solid #FF3D00;
+        border-radius: 16px;
+        padding: 15px;
+        text-align: center;
+        animation: flash-border 1.5s infinite;
+        margin-bottom: 15px;
+    }
     .footer-text { text-align: center; font-size: 11px; color: #666666; margin-top: 25px; }
 </style>
 """, unsafe_allow_html=True)
 
 # --- SESSION STATES ---
 if "history" not in st.session_state: st.session_state.history = []
+if "spreads" not in st.session_state: st.session_state.spreads = [] # เก็บแต้มความห่างแต่ละตา
 if "shoe_logs" not in st.session_state: st.session_state.shoe_logs = []
 if "shoe_count" not in st.session_state: st.session_state.shoe_count = 1
 if "card_counts" not in st.session_state: st.session_state.card_counts = {i: 0 for i in range(10)}
+if "temp_win_side" not in st.session_state: st.session_state.temp_win_side = None
 if "total_cards" not in st.session_state: st.session_state.total_cards = 0
 
 # --- 1. BUILD BIG ROAD MATRIX ---
@@ -69,7 +86,7 @@ def match_special_patterns(clean_history):
     
     return None, 0.5, 0.5
 
-# --- 4. 3 DERIVED ROADS & MATRIX FUSION ENGINE ---
+# --- 4. 3 DERIVED ROADS & MATRIX FUSION ---
 def get_derived_road_signal(matrix, offset):
     if len(matrix) <= offset: return 0
     curr_col_idx = len(matrix) - 1
@@ -94,7 +111,7 @@ def derived_roads_engine(history):
     
     score = big_eye + small_road + cockroach
     last_side = matrix[-1][0]
-    is_fusion_match = (abs(score) == 3) # ถ้าลูกทั้ง 3 ตารางพุ่งไปทางเดียวกันเป๊ะ = โคตรไม้เด็ด
+    is_fusion_match = (abs(score) == 3)
     
     if score > 0:
         return (0.78, 0.22) if last_side == 'B' else (0.22, 0.78), is_fusion_match
@@ -116,29 +133,33 @@ def markov_chain_prob(history):
     if total == 0: return 0.5068, 0.4932
     return b_next / total, p_next / total
 
-# --- 6. ADVANCED HI-LO & HIGH/LOW CARD RATIO ENGINE ---
+# --- 6. ADVANCED HI-LO & POINT SPREAD MONITOR ---
 def get_hilo_card_bias():
     counts = st.session_state.card_counts
     running_count = (counts[0]*1.2) + (counts[1]*1.0) + (counts[2]*0.8) + (counts[3]*1.5) - (counts[7]*1.0) - (counts[8]*1.5) - (counts[9]*1.2)
     decks_remaining = max(1.0, (416 - st.session_state.total_cards) / 52.0)
     true_count = running_count / decks_remaining
     
-    # คำนวณความเข้มข้นไพ่สูง (8, 9, 10, J, Q, K) ส่งผลต่อแต้มธรรมชาติ
-    high_cards_left = (counts[0] * 16) # คร่าวๆ จากสัดส่วน
-    card_concentration_bias = (true_count * 0.012)
+    # นำ Point Spread (ความห่างแต้มเฉลี่ย) มาช่วยให้น้ำหนักแม่นยำขึ้น
+    spread_boost = 0.0
+    if st.session_state.spreads:
+        avg_spread = sum(st.session_state.spreads[-10:]) / len(st.session_state.spreads[-10:])
+        if avg_spread >= 4.0: spread_boost = 0.03 # ชนะแต้มขาดลอยบ่อย เค้าไพ่เดินดี
+        
+    card_concentration_bias = (true_count * 0.012) + spread_boost
     
     b_bias = card_concentration_bias
     p_bias = -card_concentration_bias
     
-    return max(-0.08, min(0.08, p_bias)), max(-0.08, min(0.08, b_bias)), true_count, running_count
+    return max(-0.09, min(0.09, p_bias)), max(-0.09, min(0.09, b_bias)), true_count, running_count
 
-# --- 7. AGGRESSIVE SNIPER ANALYZER ENGINE ---
+# --- 7. SNIPER ANALYZER ENGINE ---
 def analyze_engine(history_slice, base_threshold, min_rounds):
     clean = [x for x in history_slice if x in ['B', 'P']]
     if len(clean) < min_rounds: return None
     
     chop_index = calculate_choppiness(clean)
-    dynamic_threshold = base_threshold + (chop_index * 3.0) # ปรับให้ไวขึ้น ไม่ตึงเกินไปเพื่อให้ยิงได้ถี่ขึ้น
+    dynamic_threshold = base_threshold + (chop_index * 3.0)
     
     p_b_base, p_p_base = 0.5068, 0.4932
     p_b_mk, p_p_mk = markov_chain_prob(clean)
@@ -146,7 +167,6 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
     pat_name, p_b_pat, p_p_pat = match_special_patterns(clean)
     p_bias_card, b_bias_card, true_count, _ = get_hilo_card_bias()
     
-    # เพิ่มน้ำหนักความคม (Aggressive Weighting)
     if pat_name:
         composite_b = (p_b_mk * 0.30) + (p_b_dr * 0.35) + (p_b_pat * 0.25) + (b_bias_card * 0.10)
         composite_p = (p_p_mk * 0.30) + (p_p_dr * 0.35) + (p_p_pat * 0.25) + (p_bias_card * 0.10)
@@ -154,7 +174,6 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
         composite_b = (p_b_base * 0.05) + (p_b_mk * 0.45) + (p_b_dr * 0.40) + b_bias_card
         composite_p = (p_p_base * 0.05) + (p_p_mk * 0.45) + (p_p_dr * 0.40) + p_bias_card
         
-    # ถ้าตารางลูกสอดคล้องทุกตาราง (Matrix Fusion) บูสต์ความคมเพิ่มทันที
     if is_fusion_match:
         if composite_b > composite_p: composite_b += 0.08
         else: composite_p += 0.08
@@ -220,8 +239,8 @@ def evaluate_martingale_4steps(history, target_threshold, min_rounds):
     return curr_step, w1, w2, w3, w4, losses, logs
 
 # ---------------- HEADER ----------------
-st.markdown('<div class="app-title">🎰 BAR Rich BAR Pro Elite [SNIPER EDITION]</div>', unsafe_allow_html=True)
-st.markdown('<div class="creator-title">KAiTUN888 By.Epic (คม ถี่ รุนแรง ชัวร์)</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-title">🎰 BAR Rich BAR Pro Elite [SNIPER V2]</div>', unsafe_allow_html=True)
+st.markdown('<div class="creator-title">KAiTUN888 By.Epic (Point Spread & Flash Alerts)</div>', unsafe_allow_html=True)
 
 with st.expander("⚙️ ปรับแต่งเกณฑ์ความคม (Sniper Settings)", expanded=False):
     strategy = st.radio(
@@ -234,13 +253,13 @@ with st.expander("⚙️ ปรับแต่งเกณฑ์ความค�
     else: base_threshold, min_rounds = 57.0, 8
 
 # ---------------- HI-LO CARD COUNTER SECTION ----------------
-with st.expander("🃏 ระบบนับไพ่ Hi-Lo & Card Concentration (กดเลือกหน้าไพ่ที่ออกจริง)", expanded=True):
+with st.expander("🃏 ระบบนับไพ่ Hi-Lo & Point Spread Monitor", expanded=True):
     _, _, _, running_cnt = get_hilo_card_bias()
     m_col1, m_col2 = st.columns(2)
     with m_col1: st.metric("🎴 ไพ่ที่ออกไปแล้ว", f"{st.session_state.total_cards} ใบ")
     with m_col2: st.metric("📊 True Count Index", f"{running_cnt:.2f}")
 
-    st.caption("จิ้มกดหน้าไพ่ทุกใบที่เปิดบนโต๊ะ (นับรวมทุกใบ 2-3 ใบแรก/จั่วเพิ่ม):")
+    st.caption("จิ้มกดหน้าไพ่ทุกใบที่เปิดบนโต๊ะ:")
     
     ca, cb, cc, cd, ce = st.columns(5)
     with ca:
@@ -271,28 +290,71 @@ with st.expander("🃏 ระบบนับไพ่ Hi-Lo & Card Concentration
         st.session_state.total_cards = 0
         st.rerun()
 
-# ---------------- MAIN GAME BUTTONS ----------------
-c1, c2, c3 = st.columns(3)
-with c1:
-    if st.button("🔵 PLAYER", use_container_width=True):
-        st.session_state.history.append('P')
-        st.rerun()
-with c2:
-    if st.button("🔴 BANKER", use_container_width=True):
-        st.session_state.history.append('B')
-        st.rerun()
-with c3:
-    if st.button("🟢 TIE", use_container_width=True):
+st.divider()
+
+# ---------------- ROUND & SPREAD SELECTION ----------------
+st.markdown("### 🏆 บันทึกผลจริงและแต้มที่ชนะ (Margin of Victory)")
+st.caption("เลือกฝั่งที่ชนะ แล้วระบุแต้มความห่าง (หรือป๊อก) เพื่อบันทึกเข้าสู่ระบบ:")
+
+sc1, sc2, sc3 = st.columns(3)
+with sc1:
+    if st.button("🔵 PLAYER ชนะ", use_container_width=True):
+        st.session_state.temp_win_side = 'P'
+with sc2:
+    if st.button("🔴 BANKER ชนะ", use_container_width=True):
+        st.session_state.temp_win_side = 'B'
+with sc3:
+    if st.button("🟢 TIE เสมอ", use_container_width=True):
         st.session_state.history.append('T')
+        st.session_state.temp_win_side = None
         st.rerun()
+
+# ถ้าเลือกฝั่งชนะแล้ว ให้เลือกแต้มต่อ
+if st.session_state.temp_win_side in ['P', 'B']:
+    side_name = "PLAYER" if st.session_state.temp_win_side == 'P' else "BANKER"
+    st.info(f"👉 กำลังบันทึกฝั่ง **{side_name}** ชนะ กรุณาเลือกแต้มความห่างด้านล่าง:")
+    
+    sp1, sp2, sp3, sp4, sp5 = st.columns(5)
+    with sp1:
+        if st.button("⭐ ป๊อก 8 / 9", use_container_width=True):
+            st.session_state.history.append(st.session_state.temp_win_side)
+            st.session_state.spreads.append(8)
+            st.session_state.temp_win_side = None
+            st.rerun()
+    with sp2:
+        if st.button("แต้มห่าง 4-5", use_container_width=True):
+            st.session_state.history.append(st.session_state.temp_win_side)
+            st.session_state.spreads.append(4)
+            st.session_state.temp_win_side = None
+            st.rerun()
+    with sp3:
+        if st.button("แต้มห่าง 2-3", use_container_width=True):
+            st.session_state.history.append(st.session_state.temp_win_side)
+            st.session_state.spreads.append(2)
+            st.session_state.temp_win_side = None
+            st.rerun()
+    with sp4:
+        if st.button("แต้มเฉือน 1 แต้ม", use_container_width=True):
+            st.session_state.history.append(st.session_state.temp_win_side)
+            st.session_state.spreads.append(1)
+            st.session_state.temp_win_side = None
+            st.rerun()
+    with sp5:
+        if st.button("❌ ยกเลิก", use_container_width=True):
+            st.session_state.temp_win_side = None
+            st.rerun()
 
 t1, t2, t3 = st.columns(3)
 with t1:
     if st.button("↩ ย้อนกลับ", use_container_width=True):
-        if st.session_state.history: st.session_state.history.pop(); st.rerun()
+        if st.session_state.history: 
+            st.session_state.history.pop()
+            if st.session_state.spreads: st.session_state.spreads.pop()
+            st.rerun()
 with t2:
     if st.button("🔄 ล้างขอนนี้", use_container_width=True):
         st.session_state.history = []
+        st.session_state.spreads = []
         st.session_state.card_counts = {i: 0 for i in range(10)}
         st.session_state.total_cards = 0
         st.rerun()
@@ -307,6 +369,7 @@ with t3:
             })
             st.session_state.shoe_count += 1
             st.session_state.history = []
+            st.session_state.spreads = []
             st.session_state.card_counts = {i: 0 for i in range(10)}
             st.session_state.total_cards = 0
             st.toast("✅ บันทึกประวัติขอนเรียบร้อยแล้ว!")
@@ -333,8 +396,14 @@ if res:
     if res["pat_name"]:
         st.success(f"🎯 ตรวจพบเค้าไพ่พิเศษ: **{res['pat_name']}**")
         
+    # ระบบ Flash Alert เตือนภัยสไตล์ดุดันเมื่อเจอโคตรไม้เด็ด
     if res["is_fusion_match"]:
-        st.markdown('<div class="kelly-card" style="border-color:#FF3D00; background:#1A1110;">⭐ **แจ้งเตือนพิเศษ: โคตรไม้เด็ด (Matrix Fusion ตรงกัน 100%) ความคมระดับสูงสุด!**</div>', unsafe_allow_html=True)
+        st.markdown('''
+        <div class="flash-alert">
+            <h2 style="color: #FFD700; margin: 0; font-weight: 900;">⚡ ⭐ โคตรไม้เด็ด [MATRIX FUSION ALERT] ⭐ ⚡</h2>
+            <p style="color: #FF3D00; margin: 5px 0 0 0; font-weight: 800; font-size: 16px;">ตารางหลักและตารางลูกพุ่งตรงกัน 100% - จังหวะทำเงินระดับพระกาฬ!</p>
+        </div>
+        ''', unsafe_allow_html=True)
 
     if action == "BANKER":
         st.error(f"### 🔴 ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
@@ -372,23 +441,4 @@ with st.expander("📜 ประวัติย้อนหลังหลาย
         df_shoes = pd.DataFrame(st.session_state.shoe_logs)
         st.dataframe(df_shoes, use_container_width=True)
         if st.button("🗑️ ล้างประวัติขอนทั้งหมด"):
-            st.session_state.shoe_logs = []; st.session_state.shoe_count = 1; st.rerun()
-    else: st.write("ยังไม่มีประวัติขอนที่บันทึกไว้")
-
-with st.expander("📝 บันทึกประวัติการเข้าไม้ตาต่อตา (Current Shoe Logs)"):
-    if detailed_logs:
-        df_logs = pd.DataFrame(detailed_logs)
-        st.dataframe(df_logs, use_container_width=True)
-    else: st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
-
-# ---------------- HOW TO USE SECTION ----------------
-with st.expander("📖 คู่มือและวิธีใช้งานโหมดสไนเปอร์ (How to Use)", expanded=True):
-    st.markdown("""
-    **วิธีลุยทำกำไรแบบคม ถี่ รุนแรง:**
-    1. **จิ้มไพ่บนโต๊ะ:** ทุกครั้งที่เปิดไพ่ ให้กดเลือกหน้าไพ่ทุกใบที่ออก เพื่อให้ระบบประมวลผลความหนาแน่นของไพ่
-    2. **บันทึกผลจริง:** หลังจบตา กดผลจริง (**`🔵 PLAYER`**, **`🔴 BANKER`**, **`🟢 TIE`**)
-    3. **สังเกตป้าย ⭐ โคตรไม้เด็ด:** ถ้าขึ้นป้ายนี้และตรงกับสัญญาณไฟสีแดง/น้ำเงิน แปลว่าจังหวะสไนเปอร์มาแล้ว ลุยตามคำแนะนำได้เลย!
-    """)
-
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper Edition • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-    
+            st.session_state
