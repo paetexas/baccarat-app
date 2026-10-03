@@ -5,7 +5,7 @@ import pandas as pd
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="BAR Rich BAR Pro Elite", layout="centered", initial_sidebar_state="collapsed")
 
-# Custom CSS ตกแต่ง UI Neon Dark Theme ดุดัน สไตล์ Sniper
+# Custom CSS ตกแต่ง UI Neon Dark Theme
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
@@ -27,7 +27,7 @@ st.markdown("""
     }
     .flash-alert {
         background: linear-gradient(135deg, #2A1510, #1E1E2D);
-        border: 3px solid #FF3D00;
+        border: 3px solid #FFD700;
         border-radius: 16px;
         padding: 15px;
         text-align: center;
@@ -43,23 +43,11 @@ st.markdown("""
         margin-bottom: 15px;
         box-shadow: 0px 4px 15px rgba(255, 215, 0, 0.15);
     }
-    .pinned-guide h4 {
-        color: #FFD700;
-        margin-top: 0;
-        margin-bottom: 10px;
-        font-weight: 900;
-    }
+    .pinned-guide h4 { color: #FFD700; margin-top: 0; margin-bottom: 10px; font-weight: 900; }
     .warning-banner {
-        background: rgba(255, 61, 0, 0.12);
-        border: 1px solid #FF3D00;
-        color: #FF8A65;
-        text-align: center;
-        padding: 10px;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 13px;
-        margin-top: 20px;
-        margin-bottom: 10px;
+        background: rgba(255, 61, 0, 0.12); border: 1px solid #FFD700; color: #FF8A65;
+        text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px;
+        margin-top: 20px; margin-bottom: 10px;
     }
     .footer-text { text-align: center; font-size: 11px; color: #666666; margin-top: 10px; }
 </style>
@@ -173,7 +161,6 @@ def get_hilo_card_bias():
         if avg_spread >= 4.0: spread_boost = 0.03
         
     card_concentration_bias = (true_count * 0.012) + spread_boost
-    
     b_bias = card_concentration_bias
     p_bias = -card_concentration_bias
     
@@ -268,7 +255,7 @@ def evaluate_martingale_4steps(history, target_threshold, min_rounds):
 st.markdown('<div class="app-title">🎰 BAR Rich BAR Pro Elite [SNIPER V2]</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic (Point Spread & Flash Alerts)</div>', unsafe_allow_html=True)
 
-with st.expander("⚙️ ปรับแต่งเกณฑ์ความคม (Sniper Settings)", expanded=False):
+with st.expander("⚙️️ ปรับแต่งเกณฑ์ความคม (Sniper Settings)", expanded=False):
     strategy = st.radio(
         "เลือกโหมดการยิง:",
         ["🔥 โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "⚡ โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "🎯 โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
@@ -286,7 +273,6 @@ with st.expander("🃏 ระบบนับไพ่ Hi-Lo & Point Spread Monit
     with m_col2: st.metric("📊 True Count Index", f"{running_cnt:.2f}")
 
     st.caption("จิ้มกดหน้าไพ่ทุกใบที่เปิดบนโต๊ะ:")
-    
     ca, cb, cc, cd, ce = st.columns(5)
     with ca:
         if st.button("10 / J / Q / K", use_container_width=True): st.session_state.card_counts[0] += 1; st.session_state.total_cards += 1; st.rerun()
@@ -318,7 +304,7 @@ with st.expander("🃏 ระบบนับไพ่ Hi-Lo & Point Spread Monit
 
 st.divider()
 
-# ---------------- ROUND & SPREAD SELECTION (ONE-CLICK AUTO SAVE) ----------------
+# ---------------- ROUND & SPREAD SELECTION ----------------
 st.markdown("### 🏆 บันทึกผลจริงและแต้มที่ชนะ (Margin of Victory)")
 
 sc1, sc2, sc3 = st.columns(3)
@@ -385,11 +371,11 @@ with t2:
 with t3:
     if st.button("💾 บันทึกขอน", use_container_width=True):
         if len(st.session_state.history) >= min_rounds:
-            curr_step, w1, w2, w3, w4, losses, _ = evaluate_martingale_4steps(st.session_state.history, base_threshold, min_rounds)
+            curr_step, w1_val, w2_val, w3_val, w4_val, losses_val, _ = evaluate_martingale_4steps(st.session_state.history, base_threshold, min_rounds)
             st.session_state.shoe_logs.append({
                 "ขอนที่": f"ขอน #{st.session_state.shoe_count}",
                 "จำนวนตา": len(st.session_state.history),
-                "ไม้ 1": w1, "ไม้ 2": w2, "ไม้ 3": w3, "ไม้ 4": w4, "แตก": losses
+                "ไม้ 1": w1_val, "ไม้ 2": w2_val, "ไม้ 3": w3_val, "ไม้ 4": w4_val, "แตก": losses_val
             })
             st.session_state.shoe_count += 1
             st.session_state.history = []
@@ -454,4 +440,6 @@ st.divider()
 st.write("📊 **สถิติการเข้าไม้ขอนปัจจุบัน:**")
 s1, s2, s3, s4, s5 = st.columns(5)
 with s1: st.metric("🎯 ไม้ 1", f"{w1}")
-wit
+with s2: st.metric("🔥 ไม้ 2", f"{w2}")
+with s3: st.metric("⚡ ไม้ 3", f"{w3}")
+with s4: st.metric("🚀 ไม้
