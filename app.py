@@ -385,18 +385,11 @@ st.markdown("### บันทึกผลจริงตาต่อตา")
 
 sc1, sc2, sc3 = st.columns(3)
 with sc1:
-    # ปุ่ม Player ชนะ (สีน้ำเงิน)
-    if st.button("🔵 PLAYER ชนะ", use_container_width=True, type="primary"):
+    if st.button("🔵 PLAYER ชนะ", use_container_width=True):
         st.session_state.history.append('P')
         st.session_state.spreads.append(2)
         st.rerun()
 with sc2:
-    # ปุ่ม Banker ชนะ (สีแดง - ใช้ Markdown ครอบช่วยเปลี่ยนสีปุ่มแดงเด่นชัด)
-    st.markdown("""
-    <style>
-    div.stButton > button:first-child { background-color: #D32F2F; color: white; }
-    </style>
-    """, unsafe_allow_html=True)
     if st.button("🔴 BANKER ชนะ", use_container_width=True):
         st.session_state.history.append('B')
         st.session_state.spreads.append(2)
@@ -518,4 +511,12 @@ else:
 st.markdown("### บันทึกประวัติการเข้าไม้ตาต่อตา (Current Shoe Logs)")
 if detailed_logs:
     df_logs = pd.DataFrame(detailed_logs)
-    st.dataframe(df_logs, use_container_width=T     
+    st.dataframe(df_logs, use_container_width=True)
+else:
+    st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
+
+# ---------------- PINNED GUIDE AT THE BOTTOM ----------------
+st.markdown("""
+<div class="pinned-guide">
+    <h4>คู่มือการใช้งานระบบ [BAR Rich BAR Pro Elite]</h4>
+    <ol style="margin: 0; padding-left: 20px; line-height: 1.6;     
