@@ -43,14 +43,8 @@ def build_big_road(history):
     matrix.append(curr_col)
     return matrix
 
-# --- 2. ฟังก์ชั่นคำนวณ 3 เค้าไพ่อนุพันธ์จริง (True Derived Roads Logic) ---
+# --- 2. ฟังก์ชั่นคำนวณ 3 เค้าไพ่อนุพันธ์จริง ---
 def get_derived_road_signal(matrix, offset):
-    """
-    offset = 1 : ไข่ปลา (Big Eye Boy)
-    offset = 2 : ทึบ (Small Road)
-    offset = 3 : ไม้ขีด (Cockroach Road)
-    คืนค่า 1 (สีแดง - มีรูปแบบซ้ำ) หรือ -1 (สีน้ำเงิน - เปลี่ยนรูปแบบ)
-    """
     if len(matrix) <= offset:
         return 0
     
@@ -64,32 +58,27 @@ def get_derived_road_signal(matrix, offset):
     compare_col = matrix[compare_col_idx]
     
     if curr_row_idx == 0:
-        # เปรียบเทียบความยาวของคอลัมน์ก่อนหน้า
         prev_col_len = len(matrix[curr_col_idx - 1])
         comp_col_len = len(matrix[compare_col_idx])
         return 1 if prev_col_len == comp_col_len else -1
     else:
-        # เปรียบเทียบความลึกในคอลัมน์เดียวกัน
         if len(compare_col) >= curr_row_idx + 1:
-            return 1  # สีแดง
+            return 1
         else:
-            return -1 # สีน้ำเงิน
+            return -1
 
 def derived_roads_engine(history):
     matrix = build_big_road(history)
     if len(matrix) < 4:
         return 0.5, 0.5
     
-    # คำนวณสัญญาณจากทั้ง 3 เค้าไพ่
     big_eye = get_derived_road_signal(matrix, 1)   # ไข่ปลา
     small_road = get_derived_road_signal(matrix, 2) # ทึบ
     cockroach = get_derived_road_signal(matrix, 3)  # ไม้ขีด
     
     score = big_eye + small_road + cockroach
-    last_side = matrix[-1][0] # ตัวล่าสุดในกระดานหลัก
+    last_side = matrix[-1][0]
     
-    # ถ้า 3 เค้าไพ่ขึ้นสีแดง (Score > 0) -> ตามเค้าไพ่เดิม
-    # ถ้า 3 เค้าไพ่ขึ้นสีน้ำเงิน (Score < 0) -> แทงสวนเค้าไพ่เดิม
     if score > 0:
         return (0.70, 0.30) if last_side == 'B' else (0.30, 0.70)
     elif score < 0:
@@ -119,9 +108,8 @@ def analyze_engine(history_slice, target_threshold, min_rounds):
     
     p_b_base, p_p_base = 0.5068, 0.4932
     p_b_mk, p_p_mk = markov_chain_prob(clean)
-    p_b_dr, p_p_dr = derived_roads_engine(clean) # ดึงผลคำนวณจาก ไข่ปลา, ทึบ, ไม้ขีด จริง
+    p_b_dr, p_p_dr = derived_roads_engine(clean)
     
-    # ถ่วงน้ำหนักคำนวณ: 3 เค้าไพ่อนุพันธ์จริง (45%) + Markov (45%) + Base (10%)
     composite_b = (p_b_base * 0.10) + (p_b_mk * 0.45) + (p_b_dr * 0.45)
     composite_p = (p_p_base * 0.10) + (p_p_mk * 0.45) + (p_p_dr * 0.45)
     
@@ -187,7 +175,7 @@ st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_h
 with st.expander("⚙️ ปรับแต่งเกณฑ์วิเคราะห์ (Strategy Settings)", expanded=False):
     strategy = st.radio(
         "เลือกลักษณะการแทง:",
-        ["⚡ สายบู๊ (ออกไม้ถี่ เกณฑ์ 55%+)", "⚖️ สายสมดุล (เกณฑ์มาตรฐาน 60%+)", "🛡️ สายชัวร์ (แม่นยำสูง เกณฑ์ 65%+)"],
+        ["⚡ สายบู๊ (ออกไม้ถี่ เกณฑ์ 55%+)", "⚖️ สายสมดุล (เกณฑ์มาตรฐาน 60%+)", "🛡️️ สายชัวร์ (แม่นยำสูง เกณฑ์ 65%+)"],
         index=2
     )
     if "สายบู๊" in strategy: target_threshold, min_rounds = 55.0, 8
@@ -284,56 +272,4 @@ with st.expander("📝 บันทึกประวัติการเข้
         st.dataframe(df_logs, use_container_width=True)
     else: st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
 
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)ndss)
-
-if res:
-    action = res["action"]
-    if action == "BANKER":
-        st.error(f"### 🔴 แทง BANKER ({res['conf_b']:.1f}%)")
-    elif action == "PLAYER":
-        st.info(f"### 🔵 แทง PLAYER ({res['conf_p']:.1f}%)")
-    else:
-        st.warning(f"### ⚪ ข้ามรอบนี้ (SKIP) - อัตราชนะไม่ถึง {target_threshold:.0f}%")
-        
-    m1, m2 = st.columns(2)
-    with m1:
-        st.metric("🔵 Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
-    with m2:
-        st.metric("🔴 Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
-else:
-    clean_count = len([x for x in st.session_state.history if x in ['B','P']])
-    st.info(f"⏳ กรุณาใส่ข้อมูลอย่างน้อย {min_rounds} ตาก่อนเริ่มวิเคราะห์ (สะสมแล้ว: {clean_count}/{min_rounds})")
-
-st.divider()
-
-# ---------------- 4. ตารางสถิติเข้าไม้ขอนปัจจุบัน ----------------
-st.write("📊 **สถิติการเข้าไม้ขอนปัจจุบัน:**")
-s1, s2, s3, s4, s5 = st.columns(5)
-with s1: st.metric("🎯 ไม้ 1", f"{w1}")
-with s2: st.metric("🔥 ไม้ 2", f"{w2}")
-with s3: st.metric("⚡ ไม้ 3", f"{w3}")
-with s4: st.metric("🚀 ไม้ 4", f"{w4}")
-with s5: st.metric("❌ แตก", f"{losses}")
-
-# ---------------- 5. ย้อนดูประวัติสถิติรวมหลายๆ ขอน ----------------
-with st.expander("📜 ประวัติย้อนหลังหลายขอน (Multi-Shoe History)"):
-    if st.session_state.shoe_logs:
-        df_shoes = pd.DataFrame(st.session_state.shoe_logs)
-        st.dataframe(df_shoes, use_container_width=True)
-        if st.button("🗑️ ล้างประวัติขอนทั้งหมด"):
-            st.session_state.shoe_logs = []
-            st.session_state.shoe_count = 1
-            st.rerun()
-    else:
-        st.write("ยังไม่มีประวัติขอนที่บันทึกไว้ (กด '💾 บันทึกขอน' เมื่อเล่นจบขอน)")
-
-with st.expander("📝 บันทึกประวัติการเข้าไม้ตาต่อตา (Current Shoe Logs)"):
-    if detailed_logs:
-        df_logs = pd.DataFrame(detailed_logs)
-        st.dataframe(df_logs, use_container_width=True)
-    else:
-        st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
-
-# เครดิต
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-    
