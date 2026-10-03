@@ -109,7 +109,7 @@ def match_special_patterns(clean_history):
     if last4 == ['B', 'B', 'B', 'B']: return "🐉 มังกรแดงเดือด", 0.88, 0.12
     if last4 == ['P', 'P', 'P', 'P']: return "🐉 มังกรน้ำเงินเดือด", 0.12, 0.88
     if last4 == ['B', 'B', 'P', 'P']: return "✂️ สองตัดคมๆ", 0.80, 0.20
-    if last4 == ['P', 'P', 'B', 'B']: return "✂️ สองตัดคมๆ", 0.20, 0.80
+    if last4 == ['P', 'P', 'B', 'B']: return "✂️️ สองตัดคมๆ", 0.20, 0.80
     
     return None, 0.5, 0.5
 
@@ -453,4 +453,41 @@ else:
 st.divider()
 
 st.write("📊 **สถิติการเข้าไม้ขอนปัจจุบัน:**")
-s1, s2, s3, s4, s5 = st.col
+s1, s2, s3, s4, s5 = st.columns(5)  # จุดที่เคยพิมพ์ตกหล่นเป็น st.col ถูกแก้ไขเป็น st.columns(5) เรียบร้อยแล้ว
+with s1: st.metric("🎯 ไม้ 1", f"{w1}")
+with s2: st.metric("🔥 ไม้ 2", f"{w2}")
+with s3: st.metric("⚡ ไม้ 3", f"{w3}")
+with s4: st.metric("🚀 ไม้ 4", f"{w4}")
+with s5: st.metric("❌ แตก", f"{losses}")
+
+with st.expander("📜 ประวัติย้อนหลังหลายขอน (Multi-Shoe History)"):
+    if st.session_state.shoe_logs:
+        df_shoes = pd.DataFrame(st.session_state.shoe_logs)
+        st.dataframe(df_shoes, use_container_width=True)
+        if st.button("🗑️ ล้างประวัติขอนทั้งหมด"):
+            st.session_state.shoe_logs = []; st.session_state.shoe_count = 1; st.rerun()
+    else: st.write("ยังไม่มีประวัติขอนที่บันทึกไว้")
+
+with st.expander("📝 บันทึกประวัติการเข้าไม้ตาต่อตา (Current Shoe Logs)"):
+    if detailed_logs:
+        df_logs = pd.DataFrame(detailed_logs)
+        st.dataframe(df_logs, use_container_width=True)
+    else: st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
+
+# ---------------- PINNED GUIDE AT THE BOTTOM ----------------
+st.markdown("""
+<div class="pinned-guide">
+    <h4>📖 คู่มือการใช้งานระบบ [BAR Rich BAR Pro Elite]</h4>
+    <ol style="margin: 0; padding-left: 20px; line-height: 1.6; font-size: 14px;">
+        <li><b>จิ้มกดหน้าไพ่ทุกใบ:</b> ทุกครั้งที่เปิดไพ่บนโต๊ะ (ไม่ว่าจะเป็น 2 ใบแรก หรือจั่วใบที่ 3) ให้กดเลือกหน้าไพ่ด้านบน เพื่อสะสมค่า Hi-Lo Card Counting</li>
+        <li><b>บันทึกผลจริง:</b> เมื่อจบรอบตา กดเลือกฝั่งที่ชนะ (<b>PLAYER</b> หรือ <b>BANKER</b>)</li>
+        <li><b>บันทึกแต้มความห่าง:</b> เลือกแต้มความห่างที่ชนะ (เช่น ป๊อก 8/9 หรือแต้มเฉือน) เพื่อให้ระบบวิเคราะห์ความแรงของเค้าไพ่</li>
+        <li><b>ลุยตามสัญญาณ AI:</b> ดูผลฟันธงและสถานะเดินเงินด้านบน หากขึ้นกรอบกระพริบ <b>⭐ โคตรไม้เด็ด</b> แสดงว่าเป็นจังหวะทำเงินระดับสูงสุด!</li>
+    </ol>
+</div>
+""", unsafe_allow_html=True)
+
+# ---------------- DISCLAIMER WARNING ----------------
+st.markdown('<div class="warning-banner">⚠️ โปรแกรมเป็นเพียงการวิจัย ไม่สนับสนุนให้เล่นการพนัน</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+
