@@ -7,11 +7,15 @@ st.set_page_config(page_title="BAR Rich BAR Pro Elite", layout="centered", initi
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
+    
+    /* General Button Styling */
     div[data-testid="column"] button {
         height: 3.2em !important; font-size: 13px !important;
         font-weight: 800 !important; border-radius: 10px !important;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
+        color: white !important; border: none !important;
     }
+    
     .stMetric { background: linear-gradient(145deg, #161B22, #1E2430); padding: 10px; border-radius: 12px; border: 1px solid #2D3748; }
     .app-title { text-align: center; font-size: 26px; font-weight: 900; background: linear-gradient(90deg, #FFD700, #FF3D00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
@@ -231,11 +235,14 @@ st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [SNIPER V2]</div>', u
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
 
 st.markdown("### ปรับแต่งเกณฑ์ความคม (Sniper Settings)")
+
+# ใช้ key="strategy_mode" เพื่อให้ค่าโหมดถูกจำไว้ถาวร ไม่รีเซ็ตเวลาหน้าจอทำการ Rerun
 strategy = st.selectbox(
     "เลือกโหมดการยิง:",
     ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
-    index=0
+    key="strategy_mode"
 )
+
 if "ซูปเปอร์บู๊" in strategy:
     base_threshold, min_rounds = 52.0, 6
 elif "สไนเปอร์" in strategy:
@@ -316,6 +323,16 @@ if st.button("รีเซ็ตสำรับไพ่ทั้งหมด", 
 st.divider()
 
 st.markdown("### บันทึกผลจริงตาต่อตา")
+
+# กำหนดสีปุ่มบันทึกผล (PLAYER สีน้ำเงิน, BANKER สีแดง, TIE สีเขียว)
+st.markdown("""
+<style>
+    div[data-testid="column"]:nth-of-type(1) > div > button[kind="secondary"] { background-color: #1E88E5 !important; }
+    div[data-testid="column"]:nth-of-type(2) > div > button[kind="secondary"] { background-color: #E53935 !important; }
+    div[data-testid="column"]:nth-of-type(3) > div > button[kind="secondary"] { background-color: #43A047 !important; }
+</style>
+""", unsafe_allow_html=True)
+
 sc1, sc2, sc3 = st.columns(3)
 with sc1:
     if st.button("PLAYER ชนะ", use_container_width=True):
@@ -412,14 +429,13 @@ st.markdown("### ประวัติการเข้าไม้ตาต่
 if detailed_logs:
     st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
 
-# ---------------- CLEAN MARKDOWN GUIDE AT THE BOTTOM ----------------
 st.markdown("---")
 st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Sniper V2]")
 
 st.markdown("#### 1. การเลือกโหมดการยิง (Sniper Settings)")
 st.markdown("- **โหมดมาตรฐาน (เกณฑ์ 57%+):** เหมาะสำหรับการเล่นปกติ ให้ความสมดุลระหว่างความถี่ในการออกไม้และความแม่นยำ")
 st.markdown("- **โหมดซุปเปอร์บู๊ (เกณฑ์ 52%+):** เหมาะสำหรับคนชอบออกไม้ยับๆ ทำรอบไว ออกสัญญาณถี่ขึ้น")
-st.markdown("- **โหมดสไนเปอร์ (เกณฑ์ 62%+):** เน้นความชัวร์ระดับพรีเมียม กรองความเสี่ยงสูง ออกไม้ยากแต่แม่นยำสูงมาก")
+st.markdown("- **โหมดสไนเปอร์ (เกณฑ์ 62%+):** เน้นความชัวร์ระดับพรีเมียม กรองความเสี่ยงสูง ออกไมยากแต่แม่นยำสูงมาก")
 
 st.markdown("#### 2. ระบบนับไพ่ Hi-Lo & Point Spread")
 st.markdown("- เมื่อเปิดไพ่บนโต๊ะ ให้จิ้มเลือกหน้าไพ่ที่ออก (เช่น 10/J/Q/K หรือ A) ระบบจะนำไปคำนวณค่า True Count แบบเรียลไทม์เพื่อปรับค่าความน่าจะเป็นของขอนไพ่นั้นๆ")
@@ -431,4 +447,4 @@ st.markdown("- สามารถกด **บันทึกขอน** เม�
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-        
+    
