@@ -10,7 +10,7 @@ st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
     div[data-testid="column"] button {
-        height: 3.2em !important; font-size: 14px !important;
+        height: 3.2em !important; font-size: 13px !important;
         font-weight: 800 !important; border-radius: 10px !important;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
     }
@@ -221,25 +221,34 @@ with st.expander("⚙️ ปรับแต่งเกณฑ์วิเคร�
     elif "สายชัวร์" in strategy: base_threshold, min_rounds = 65.0, 10
     else: base_threshold, min_rounds = 60.0, 10
 
-# ---------------- HI-LO CARD COUNTER SECTION ----------------
-with st.expander("🃏 ระบบนับไพ่ Hi-Lo (กดบันทึกแต้มไพ่ที่ออกจริงในตา)", expanded=True):
-    st.caption("แตะปุ่มเพื่อบันทึกแต้มไพ่ที่เปิดบนโต๊ะในตานั้นๆ (นับรวมทุกใบทั้ง Player และ Banker):")
+# ---------------- HI-LO CARD COUNTER SECTION (WITH CARD NAMES) ----------------
+with st.expander("🃏 ระบบนับไพ่ Hi-Lo (กดเลือกหน้าไพ่ที่ออกจริงในตา)", expanded=True):
+    st.caption("แตะปุ่มหน้าไพ่ที่เปิดบนโต๊ะ (ระบบจะแปลงเป็นแต้มคำนวณและนับรวมให้อัตโนมัติ):")
     
-    col_a, col_b, col_c, col_d, col_e = st.columns(5)
-    with col_a:
-        if st.button("0 แต้ม", use_container_width=True): st.session_state.card_counts[0] += 1; st.session_state.total_cards += 1; st.rerun()
-        if st.button("5 แต้ม", use_container_width=True): st.session_state.card_counts[5] += 1; st.session_state.total_cards += 1; st.rerun()
-    with col_b:
-        if st.button("1 แต้ม", use_container_width=True): st.session_state.card_counts[1] += 1; st.session_state.total_cards += 1; st.rerun()
-        if st.button("6 แต้ม", use_container_width=True): st.session_state.card_counts[6] += 1; st.session_state.total_cards += 1; st.rerun()
-    with col_c:
+    # แถวที่ 1: หน้าคนและ A (10, J, Q, K, A)
+    ca, cb, cc, cd, ce = st.columns(5)
+    with ca:
+        if st.button("10 / J / Q / K", use_container_width=True): st.session_state.card_counts[0] += 1; st.session_state.total_cards += 1; st.rerun()
+    with cb:
+        if st.button("A (1 แต้ม)", use_container_width=True): st.session_state.card_counts[1] += 1; st.session_state.total_cards += 1; st.rerun()
+    with cc:
         if st.button("2 แต้ม", use_container_width=True): st.session_state.card_counts[2] += 1; st.session_state.total_cards += 1; st.rerun()
-        if st.button("7 แต้ม", use_container_width=True): st.session_state.card_counts[7] += 1; st.session_state.total_cards += 1; st.rerun()
-    with col_d:
+    with cd:
         if st.button("3 แต้ม", use_container_width=True): st.session_state.card_counts[3] += 1; st.session_state.total_cards += 1; st.rerun()
-        if st.button("8 แต้ม", use_container_width=True): st.session_state.card_counts[8] += 1; st.session_state.total_cards += 1; st.rerun()
-    with col_e:
+    with ce:
         if st.button("4 แต้ม", use_container_width=True): st.session_state.card_counts[4] += 1; st.session_state.total_cards += 1; st.rerun()
+
+    # แถวที่ 2: เลข 5 ถึง 9
+    cfa, cfb, cfc, cfd, cfe = st.columns(5)
+    with cfa:
+        if st.button("5 แต้ม", use_container_width=True): st.session_state.card_counts[5] += 1; st.session_state.total_cards += 1; st.rerun()
+    with cfb:
+        if st.button("6 แต้ม", use_container_width=True): st.session_state.card_counts[6] += 1; st.session_state.total_cards += 1; st.rerun()
+    with cfc:
+        if st.button("7 แต้ม", use_container_width=True): st.session_state.card_counts[7] += 1; st.session_state.total_cards += 1; st.rerun()
+    with cfd:
+        if st.button("8 แต้ม", use_container_width=True): st.session_state.card_counts[8] += 1; st.session_state.total_cards += 1; st.rerun()
+    with cfe:
         if st.button("9 แต้ม", use_container_width=True): st.session_state.card_counts[9] += 1; st.session_state.total_cards += 1; st.rerun()
 
     if st.button("🔄 รีเซ็ตสำรับไพ่ทั้งหมด", use_container_width=True):
@@ -361,11 +370,10 @@ with st.expander("📝 บันทึกประวัติการเข้
 # ---------------- HOW TO USE SECTION ----------------
 with st.expander("📖 คู่มือและวิธีใช้งานระบบ (How to Use)", expanded=True):
     st.markdown("""
-    **ขั้นตอนการใช้งานระบบนับไพ่ Hi-Lo และ AI วิเคราะห์บาคาร่า:**
-    1. **กดบันทึกแต้มไพ่ที่เปิดบนโต๊ะ:** ในแต่ละตาเมื่อมีการเปิดไพ่ (ไม่ว่าจะเป็น 2 ใบแรก หรือใบที่สามที่จั่วเพิ่มของทั้ง Player และ Banker) ให้กดปุ่มตัวเลข **(0 ถึง 9)** ตามแต้มจริงของไพ่ใบนั้นทันที
-       * *ข้อสังเกต:* ไพ่ 10, J, Q, K ให้กดปุ่ม **`0 แต้ม`** / ไพ่ A ให้กดปุ่ม **`1 แต้ม`** / ไพ่เลข 2-9 ให้กดตามตัวเลขหน้าไพ่ได้เลย
-    2. **บันทึกผลแพ้-ชนะ:** หลังจากทราบผลสรุปของตานั้นแล้ว ให้กดปุ่มบันทึกผลจริงด้านล่าง **`🔵 PLAYER`**, **`🔴 BANKER`** หรือ **`🟢 TIE`**
-    3. **ดูคำแนะนำตาถัดไป:** ระบบจะนำสถิติทั้งหมดมารวมกับค่า True Count เพื่อประมวลผลคำแนะนำการแทงและความมั่นใจสำหรับตาถัดไปให้คุณอัตโนมัติ
+    **ขั้นตอนการใช้งานระบบนับไพ่และ AI วิเคราะห์บาคาร่า:**
+    1. **กดเลือกหน้าไพ่ที่เปิดบนโต๊ะ:** เมื่อไพ่เปิดออกมา (ไม่ว่าจะเป็น 2 ใบแรก หรือใบที่ 3) ให้กดปุ่มหน้าไพ่ตรงตัวได้ทันที เช่น ออก `J` หรือ `K` ให้กดปุ่ม **`10 / J / Q / K`**, ออก `A` ให้กดปุ่ม **`A (1 แต้ม)`**, หรือออกเลขอื่นๆ ให้กดตามตัวเลขหน้าไพ่ได้เลย
+    2. **บันทึกผลแพ้-ชนะ:** หลังจากทราบผลสรุปตานั้น ให้กดบันทึกผลจริง **`🔵 PLAYER`**, **`🔴 BANKER`** หรือ **`🟢 TIE`** ด้านล่าง
+    3. **ดูคำแนะนำตาถัดไป:** ระบบจะนำสถิติทั้งหมดมาประมวลผลคำแนะนำการแทงให้คุณอัตโนมัติ
     """)
 
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
