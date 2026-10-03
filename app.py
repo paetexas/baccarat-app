@@ -34,13 +34,40 @@ st.markdown("""
         animation: flash-border 1.5s infinite;
         margin-bottom: 15px;
     }
-    .footer-text { text-align: center; font-size: 11px; color: #666666; margin-top: 25px; }
+    .pinned-guide {
+        background: linear-gradient(145deg, #161B22, #1A1F2C);
+        border: 2px solid #FFD700;
+        border-radius: 14px;
+        padding: 18px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        box-shadow: 0px 4px 15px rgba(255, 215, 0, 0.15);
+    }
+    .pinned-guide h4 {
+        color: #FFD700;
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-weight: 900;
+    }
+    .warning-banner {
+        background: rgba(255, 61, 0, 0.12);
+        border: 1px solid #FF3D00;
+        color: #FF8A65;
+        text-align: center;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+    .footer-text { text-align: center; font-size: 11px; color: #666666; margin-top: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
 # --- SESSION STATES ---
 if "history" not in st.session_state: st.session_state.history = []
-if "spreads" not in st.session_state: st.session_state.spreads = [] # เก็บแต้มความห่างแต่ละตา
+if "spreads" not in st.session_state: st.session_state.spreads = [] 
 if "shoe_logs" not in st.session_state: st.session_state.shoe_logs = []
 if "shoe_count" not in st.session_state: st.session_state.shoe_count = 1
 if "card_counts" not in st.session_state: st.session_state.card_counts = {i: 0 for i in range(10)}
@@ -140,11 +167,10 @@ def get_hilo_card_bias():
     decks_remaining = max(1.0, (416 - st.session_state.total_cards) / 52.0)
     true_count = running_count / decks_remaining
     
-    # นำ Point Spread (ความห่างแต้มเฉลี่ย) มาช่วยให้น้ำหนักแม่นยำขึ้น
     spread_boost = 0.0
     if st.session_state.spreads:
         avg_spread = sum(st.session_state.spreads[-10:]) / len(st.session_state.spreads[-10:])
-        if avg_spread >= 4.0: spread_boost = 0.03 # ชนะแต้มขาดลอยบ่อย เค้าไพ่เดินดี
+        if avg_spread >= 4.0: spread_boost = 0.03
         
     card_concentration_bias = (true_count * 0.012) + spread_boost
     
@@ -309,7 +335,6 @@ with sc3:
         st.session_state.temp_win_side = None
         st.rerun()
 
-# ถ้าเลือกฝั่งชนะแล้ว ให้เลือกแต้มต่อ
 if st.session_state.temp_win_side in ['P', 'B']:
     side_name = "PLAYER" if st.session_state.temp_win_side == 'P' else "BANKER"
     st.info(f"👉 กำลังบันทึกฝั่ง **{side_name}** ชนะ กรุณาเลือกแต้มความห่างด้านล่าง:")
@@ -396,7 +421,6 @@ if res:
     if res["pat_name"]:
         st.success(f"🎯 ตรวจพบเค้าไพ่พิเศษ: **{res['pat_name']}**")
         
-    # ระบบ Flash Alert เตือนภัยสไตล์ดุดันเมื่อเจอโคตรไม้เด็ด
     if res["is_fusion_match"]:
         st.markdown('''
         <div class="flash-alert">
@@ -429,16 +453,4 @@ else:
 st.divider()
 
 st.write("📊 **สถิติการเข้าไม้ขอนปัจจุบัน:**")
-s1, s2, s3, s4, s5 = st.columns(5)
-with s1: st.metric("🎯 ไม้ 1", f"{w1}")
-with s2: st.metric("🔥 ไม้ 2", f"{w2}")
-with s3: st.metric("⚡ ไม้ 3", f"{w3}")
-with s4: st.metric("🚀 ไม้ 4", f"{w4}")
-with s5: st.metric("❌ แตก", f"{losses}")
-
-with st.expander("📜 ประวัติย้อนหลังหลายขอน (Multi-Shoe History)"):
-    if st.session_state.shoe_logs:
-        df_shoes = pd.DataFrame(st.session_state.shoe_logs)
-        st.dataframe(df_shoes, use_container_width=True)
-        if st.button("🗑️ ล้างประวัติขอนทั้งหมด"):
-            st.session_state
+s1, s2, s3, s4, s5 = st.col
