@@ -97,7 +97,7 @@ def match_special_patterns(clean_history):
     if last4 == ['B', 'B', 'B', 'B']: return "🐉 มังกรแดงเดือด", 0.88, 0.12
     if last4 == ['P', 'P', 'P', 'P']: return "🐉 มังกรน้ำเงินเดือด", 0.12, 0.88
     if last4 == ['B', 'B', 'P', 'P']: return "✂️ สองตัดคมๆ", 0.80, 0.20
-    if last4 == ['P', 'P', 'B', 'B']: return "✂ สองตัดคมๆ", 0.20, 0.80
+    if last4 == ['P', 'P', 'B', 'B']: return "✂️ สองตัดคมๆ", 0.20, 0.80
     
     return None, 0.5, 0.5
 
@@ -129,10 +129,10 @@ def derived_roads_engine(history):
     is_fusion_match = (abs(score) == 3)
     
     if score > 0:
-        return (0.78, 0.22) if last_side == 'B' else (0.22, 0.78), is_fusion_match
+        return ((0.78, 0.22) if last_side == 'B' else (0.22, 0.78)), is_fusion_match
     elif score < 0:
-        return (0.22, 0.78) if last_side == 'B' else (0.78, 0.22), is_fusion_match
-    return 0.5, 0.5, False
+        return ((0.22, 0.78) if last_side == 'B' else (0.78, 0.22)), is_fusion_match
+    return (0.5, 0.5), False
 
 # --- 5. MARKOV CHAIN ENGINE ---
 def markov_chain_prob(history):
@@ -255,7 +255,7 @@ def evaluate_martingale_4steps(history, target_threshold, min_rounds):
 st.markdown('<div class="app-title">🎰 BAR Rich BAR Pro Elite [SNIPER V2]</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic (Point Spread & Flash Alerts)</div>', unsafe_allow_html=True)
 
-with st.expander("⚙️️ ปรับแต่งเกณฑ์ความคม (Sniper Settings)", expanded=False):
+with st.expander("⚙ ปรับแต่งเกณฑ์ความคม (Sniper Settings)", expanded=False):
     strategy = st.radio(
         "เลือกโหมดการยิง:",
         ["🔥 โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "⚡ โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "🎯 โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
@@ -442,4 +442,4 @@ s1, s2, s3, s4, s5 = st.columns(5)
 with s1: st.metric("🎯 ไม้ 1", f"{w1}")
 with s2: st.metric("🔥 ไม้ 2", f"{w2}")
 with s3: st.metric("⚡ ไม้ 3", f"{w3}")
-with s4: st.metric("🚀 ไม้
+with s4: st.metric("?
