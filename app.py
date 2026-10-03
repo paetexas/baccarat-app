@@ -10,8 +10,8 @@ st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
     div[data-testid="column"] button {
-        height: 3.8em !important; font-size: 15px !important;
-        font-weight: 800 !important; border-radius: 12px !important;
+        height: 3.2em !important; font-size: 14px !important;
+        font-weight: 800 !important; border-radius: 10px !important;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
     }
     .stMetric { background: linear-gradient(145deg, #161B22, #1E2430); padding: 10px; border-radius: 12px; border: 1px solid #2D3748; }
@@ -27,8 +27,8 @@ st.markdown("""
 if "history" not in st.session_state: st.session_state.history = []
 if "shoe_logs" not in st.session_state: st.session_state.shoe_logs = []
 if "shoe_count" not in st.session_state: st.session_state.shoe_count = 1
-if "count_4" not in st.session_state: st.session_state.count_4 = 0
-if "count_high" not in st.session_state: st.session_state.count_high = 0
+if "card_counts" not in st.session_state: st.session_state.card_counts = {i: 0 for i in range(10)}
+if "total_cards" not in st.session_state: st.session_state.total_cards = 0
 
 # --- 1. BUILD BIG ROAD MATRIX ---
 def build_big_road(history):
@@ -115,11 +115,17 @@ def markov_chain_prob(history):
     if total == 0: return 0.5068, 0.4932
     return b_next / total, p_next / total
 
-# --- 6. CARD COUNTING BIAS ENGINE ---
-def get_card_counting_bias():
-    b_bias = (st.session_state.count_4 * 0.015) - (st.session_state.count_high * 0.005)
-    p_bias = (st.session_state.count_high * 0.010) - (st.session_state.count_4 * 0.010)
-    return max(-0.05, min(0.05, p_bias)), max(-0.05, min(0.05, b_bias))
+# --- 6. HI-LO FULL CARD COUNTING ENGINE ---
+def get_hilo_card_bias():
+    counts = st.session_state.card_counts
+    running_count = (counts[0]*1.2) + (counts[1]*1.0) + (counts[2]*0.8) + (counts[3]*1.5) - (counts[7]*1.0) - (counts[8]*1.5) - (counts[9]*1.2)
+    decks_remaining = max(1.0, (416 - st.session_state.total_cards) / 52.0)
+    true_count = running_count / decks_remaining
+    
+    b_bias = true_count * 0.008
+    p_bias = -true_count * 0.008
+    
+    return max(-0.06, min(0.06, p_bias)), max(-0.06, min(0.06, b_bias)), true_count
 
 # --- 7. MAIN ANALYZER ENGINE ---
 def analyze_engine(history_slice, base_threshold, min_rounds):
@@ -133,7 +139,7 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
     p_b_mk, p_p_mk = markov_chain_prob(clean)
     p_b_dr, p_p_dr = derived_roads_engine(clean)
     pat_name, p_b_pat, p_p_pat = match_special_patterns(clean)
-    p_bias_card, b_bias_card = get_card_counting_bias()
+    p_bias_card, b_bias_card, true_count = get_hilo_card_bias()
     
     if pat_name:
         composite_b = (p_b_base * 0.05) + (p_b_mk * 0.35) + (p_b_dr * 0.35) + (p_b_pat * 0.25) + b_bias_card
@@ -163,7 +169,8 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
         "ev_p": ev_p,
         "pat_name": pat_name,
         "chop_index": chop_index,
-        "dynamic_threshold": dynamic_threshold
+        "dynamic_threshold": dynamic_threshold,
+        "true_count": true_count
     }
 
 def evaluate_martingale_4steps(history, target_threshold, min_rounds):
@@ -202,7 +209,7 @@ def evaluate_martingale_4steps(history, target_threshold, min_rounds):
 
 # ---------------- HEADER ----------------
 st.markdown('<div class="app-title">🎰 BAR Rich BAR Pro Elite</div>', unsafe_allow_html=True)
-st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+st.markdown('<div class="creator-title">KAiTUN888 By.Epic (Hi-Lo Card Counting Edition)</div>', unsafe_allow_html=True)
 
 with st.expander("⚙️ ปรับแต่งเกณฑ์วิเคราะห์ (Strategy Settings)", expanded=False):
     strategy = st.radio(
@@ -214,17 +221,31 @@ with st.expander("⚙️ ปรับแต่งเกณฑ์วิเคร�
     elif "สายชัวร์" in strategy: base_threshold, min_rounds = 65.0, 10
     else: base_threshold, min_rounds = 60.0, 10
 
-# ---------------- CARD COUNTER SECTION ----------------
-with st.expander("🃏 ตัวช่วยนับไพ่ในขอน (Quick Card Counter)", expanded=True):
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button(f"🃏 เห็นไพ่เลข 4 ({st.session_state.count_4})", use_container_width=True):
-            st.session_state.count_4 += 1
-            st.rerun()
-    with col2:
-        if st.button(f"👑 เห็นหน้าใหญ่/9 ({st.session_state.count_high})", use_container_width=True):
-            st.session_state.count_high += 1
-            st.rerun()
+# ---------------- HI-LO CARD COUNTER SECTION ----------------
+with st.expander("🃏 ระบบนับไพ่ Hi-Lo (กดบันทึกแต้มไพ่ที่ออกจริงในตา)", expanded=True):
+    st.caption("แตะปุ่มเพื่อบันทึกแต้มไพ่ที่เปิดบนโต๊ะในตานั้นๆ (นับรวมทุกใบทั้ง Player และ Banker):")
+    
+    col_a, col_b, col_c, col_d, col_e = st.columns(5)
+    with col_a:
+        if st.button("0 แต้ม", use_container_width=True): st.session_state.card_counts[0] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("5 แต้ม", use_container_width=True): st.session_state.card_counts[5] += 1; st.session_state.total_cards += 1; st.rerun()
+    with col_b:
+        if st.button("1 แต้ม", use_container_width=True): st.session_state.card_counts[1] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("6 แต้ม", use_container_width=True): st.session_state.card_counts[6] += 1; st.session_state.total_cards += 1; st.rerun()
+    with col_c:
+        if st.button("2 แต้ม", use_container_width=True): st.session_state.card_counts[2] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("7 แต้ม", use_container_width=True): st.session_state.card_counts[7] += 1; st.session_state.total_cards += 1; st.rerun()
+    with col_d:
+        if st.button("3 แต้ม", use_container_width=True): st.session_state.card_counts[3] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("8 แต้ม", use_container_width=True): st.session_state.card_counts[8] += 1; st.session_state.total_cards += 1; st.rerun()
+    with col_e:
+        if st.button("4 แต้ม", use_container_width=True): st.session_state.card_counts[4] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("9 แต้ม", use_container_width=True): st.session_state.card_counts[9] += 1; st.session_state.total_cards += 1; st.rerun()
+
+    if st.button("🔄 รีเซ็ตสำรับไพ่ทั้งหมด", use_container_width=True):
+        st.session_state.card_counts = {i: 0 for i in range(10)}
+        st.session_state.total_cards = 0
+        st.rerun()
 
 # ---------------- MAIN GAME BUTTONS ----------------
 c1, c2, c3 = st.columns(3)
@@ -248,8 +269,8 @@ with t1:
 with t2:
     if st.button("🔄 ล้างขอนนี้", use_container_width=True):
         st.session_state.history = []
-        st.session_state.count_4 = 0
-        st.session_state.count_high = 0
+        st.session_state.card_counts = {i: 0 for i in range(10)}
+        st.session_state.total_cards = 0
         st.rerun()
 with t3:
     if st.button("💾 บันทึกขอน", use_container_width=True):
@@ -262,8 +283,8 @@ with t3:
             })
             st.session_state.shoe_count += 1
             st.session_state.history = []
-            st.session_state.count_4 = 0
-            st.session_state.count_high = 0
+            st.session_state.card_counts = {i: 0 for i in range(10)}
+            st.session_state.total_cards = 0
             st.toast("✅ บันทึกประวัติขอนเรียบร้อยแล้ว!")
             st.rerun()
 
@@ -302,9 +323,9 @@ if res:
     highest_conf = max(res['conf_b'], res['conf_p'])
     if action != "SKIP":
         if highest_conf >= 72.0:
-            st.markdown('<div class="kelly-card">💡 **คำแนะนำการลงเงิน:** ความมั่นใจสูงมาก **(แนะนำอัด 1.5x - 2.0x เท่าของไม้ปกติ)**</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="kelly-card">💡 **คำแนะนำการลงเงิน:** True Count ({res["true_count"]:.2f}) แม่นยำสูง **(แนะนำอัด 1.5x - 2.0x)**</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="kelly-card">💡 **คำแนะนำการลงเงิน:** ความมั่นใจมาตรฐาน **(เดินเงิน 1.0x ตามแผนปกติ)**</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="kelly-card">💡 **คำแนะนำการลงเงิน:** True Count ({res["true_count"]:.2f}) มาตรฐาน **(เดินเงิน 1.0x)**</div>', unsafe_allow_html=True)
 
     m1, m2 = st.columns(2)
     with m1: st.metric("🔵 Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
@@ -337,13 +358,14 @@ with st.expander("📝 บันทึกประวัติการเข้
         st.dataframe(df_logs, use_container_width=True)
     else: st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
 
-# ---------------- HOW TO USE SECTION (ADDED AT BOTTOM) ----------------
-with st.expander("📖 คู่มือและวิธีใช้งานระบบ (How to Use)", expanded=False):
+# ---------------- HOW TO USE SECTION ----------------
+with st.expander("📖 คู่มือและวิธีใช้งานระบบ (How to Use)", expanded=True):
     st.markdown("""
-    **ขั้นตอนการใช้งานในแต่ละตา:**
-    1. **เช็คไพ่พิเศษ:** หากในตานั้นคุณเห็นไพ่เลข **4** หรือ ไพ่หน้าใหญ่/ป๊อก (**9, 10, J, Q, K**) เปิดออกมา ให้กดปุ่มนับไพ่ด้านบน *(`🃏 เห็นไพ่เลข 4` หรือ `👑 เห็นหน้าใหญ่/9`)* ตามที่พบจริง (หากตาไหนไม่มีให้ข้ามไป)
-    2. **บันทึกผลจริง:** เมื่อผลรอบนั้นออกแล้ว ให้กดบันทึกผลลัพธ์จริงที่ปุ่ม **🔵 PLAYER**, **🔴 BANKER** หรือ **🟢 TIE**
-    3. **ดูคำแนะนำตาถัดไป:** ระบบจะนำผลลัพธ์และแต้มไพ่ที่สะสมไปประมวลผลทันที เพื่อแสดงผลคำแนะนำการแทงและความมั่นใจในตาถัดไปให้ทราบ
+    **ขั้นตอนการใช้งานระบบนับไพ่ Hi-Lo และ AI วิเคราะห์บาคาร่า:**
+    1. **กดบันทึกแต้มไพ่ที่เปิดบนโต๊ะ:** ในแต่ละตาเมื่อมีการเปิดไพ่ (ไม่ว่าจะเป็น 2 ใบแรก หรือใบที่สามที่จั่วเพิ่มของทั้ง Player และ Banker) ให้กดปุ่มตัวเลข **(0 ถึง 9)** ตามแต้มจริงของไพ่ใบนั้นทันที
+       * *ข้อสังเกต:* ไพ่ 10, J, Q, K ให้กดปุ่ม **`0 แต้ม`** / ไพ่ A ให้กดปุ่ม **`1 แต้ม`** / ไพ่เลข 2-9 ให้กดตามตัวเลขหน้าไพ่ได้เลย
+    2. **บันทึกผลแพ้-ชนะ:** หลังจากทราบผลสรุปของตานั้นแล้ว ให้กดปุ่มบันทึกผลจริงด้านล่าง **`🔵 PLAYER`**, **`🔴 BANKER`** หรือ **`🟢 TIE`**
+    3. **ดูคำแนะนำตาถัดไป:** ระบบจะนำสถิติทั้งหมดมารวมกับค่า True Count เพื่อประมวลผลคำแนะนำการแทงและความมั่นใจสำหรับตาถัดไปให้คุณอัตโนมัติ
     """)
 
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
