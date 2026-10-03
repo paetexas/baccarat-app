@@ -54,18 +54,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- SESSION STATES ---
-if "history" not in st.session_state: st.session_state.history = []
-if "spreads" not in st.session_state: st.session_state.spreads = [] 
-if "shoe_logs" not in st.session_state: st.session_state.shoe_logs = []
-if "shoe_count" not in st.session_state: st.session_state.shoe_count = 1
-if "card_counts" not in st.session_state: st.session_state.card_counts = {i: 0 for i in range(10)}
-if "temp_win_side" not in st.session_state: st.session_state.temp_win_side = None
-if "total_cards" not in st.session_state: st.session_state.total_cards = 0
+if "history" not in st.session_state:
+    st.session_state.history = []
+if "spreads" not in st.session_state:
+    st.session_state.spreads = [] 
+if "shoe_logs" not in st.session_state:
+    st.session_state.shoe_logs = []
+if "shoe_count" not in st.session_state:
+    st.session_state.shoe_count = 1
+if "card_counts" not in st.session_state:
+    st.session_state.card_counts = {i: 0 for i in range(10)}
+if "temp_win_side" not in st.session_state:
+    st.session_state.temp_win_side = None
+if "total_cards" not in st.session_state:
+    st.session_state.total_cards = 0
 
 # --- 1. BUILD BIG ROAD MATRIX ---
 def build_big_road(history):
     clean = [x for x in history if x in ['B', 'P']]
-    if not clean: return []
+    if not clean:
+        return []
     matrix = []
     curr_col = [clean[0]]
     for x in clean[1:]:
@@ -79,7 +87,8 @@ def build_big_road(history):
 
 # --- 2. CHOPPINESS INDEX ---
 def calculate_choppiness(clean_history):
-    if len(clean_history) < 8: return 0.0
+    if len(clean_history) < 8:
+        return 0.0
     switches = 0
     for i in range(1, len(clean_history[-10:])):
         if clean_history[-10:][i] != clean_history[-10:][i-1]:
@@ -88,26 +97,35 @@ def calculate_choppiness(clean_history):
 
 # --- 3. PATTERN TEMPLATE MATCHING ---
 def match_special_patterns(clean_history):
-    if len(clean_history) < 4: return None, 0.5, 0.5
+    if len(clean_history) < 4:
+        return None, 0.5, 0.5
     last4 = clean_history[-4:]
     last5 = clean_history[-5:] if len(clean_history) >= 5 else []
     
-    if last5 == ['P', 'B', 'P', 'B', 'P']: return "ปิงปองยาว", 0.15, 0.85
-    if last5 == ['B', 'P', 'B', 'P', 'B']: return "ปิงปองยาว", 0.85, 0.15
-    if last4 == ['B', 'B', 'B', 'B']: return "มังกรแดงเดือด", 0.88, 0.12
-    if last4 == ['P', 'P', 'P', 'P']: return "มังกรน้ำเงินเดือด", 0.12, 0.88
-    if last4 == ['B', 'B', 'P', 'P']: return "สองตัดคมๆ", 0.80, 0.20
-    if last4 == ['P', 'P', 'B', 'B']: return "สองตัดคมๆ", 0.20, 0.80
+    if last5 == ['P', 'B', 'P', 'B', 'P']:
+        return "ปิงปองยาว", 0.15, 0.85
+    if last5 == ['B', 'P', 'B', 'P', 'B']:
+        return "ปิงปองยาว", 0.85, 0.15
+    if last4 == ['B', 'B', 'B', 'B']:
+        return "มังกรแดงเดือด", 0.88, 0.12
+    if last4 == ['P', 'P', 'P', 'P']:
+        return "มังกรน้ำเงินเดือด", 0.12, 0.88
+    if last4 == ['B', 'B', 'P', 'P']:
+        return "สองตัดคมๆ", 0.80, 0.20
+    if last4 == ['P', 'P', 'B', 'B']:
+        return "สองตัดคมๆ", 0.20, 0.80
     
     return None, 0.5, 0.5
 
 # --- 4. 3 DERIVED ROADS & MATRIX FUSION ---
 def get_derived_road_signal(matrix, offset):
-    if len(matrix) <= offset: return 0
+    if len(matrix) <= offset:
+        return 0
     curr_col_idx = len(matrix) - 1
     curr_row_idx = len(matrix[-1]) - 1
     compare_col_idx = curr_col_idx - offset
-    if compare_col_idx < 0: return 0
+    if compare_col_idx < 0:
+        return 0
     compare_col = matrix[compare_col_idx]
     
     if curr_row_idx == 0:
@@ -119,7 +137,8 @@ def get_derived_road_signal(matrix, offset):
 
 def derived_roads_engine(history):
     matrix = build_big_road(history)
-    if len(matrix) < 4: return (0.5, 0.5), False
+    if len(matrix) < 4:
+        return (0.5, 0.5), False
     big_eye = get_derived_road_signal(matrix, 1)   
     small_road = get_derived_road_signal(matrix, 2) 
     cockroach = get_derived_road_signal(matrix, 3)  
@@ -137,15 +156,19 @@ def derived_roads_engine(history):
 # --- 5. MARKOV CHAIN ENGINE ---
 def markov_chain_prob(history):
     clean = [x for x in history if x in ['B', 'P']][-30:]
-    if len(clean) < 3: return 0.5068, 0.4932
+    if len(clean) < 3:
+        return 0.5068, 0.4932
     last_two = "".join(clean[-2:])
     b_next, p_next = 0, 0
     for i in range(len(clean) - 2):
         if "".join(clean[i:i+2]) == last_two:
-            if clean[i+2] == 'B': b_next += 1
-            elif clean[i+2] == 'P': p_next += 1
+            if clean[i+2] == 'B':
+                b_next += 1
+            elif clean[i+2] == 'P':
+                p_next += 1
     total = b_next + p_next
-    if total == 0: return 0.5068, 0.4932
+    if total == 0:
+        return 0.5068, 0.4932
     return b_next / total, p_next / total
 
 # --- 6. ADVANCED HI-LO & POINT SPREAD MONITOR ---
@@ -158,7 +181,8 @@ def get_hilo_card_bias():
     spread_boost = 0.0
     if st.session_state.spreads:
         avg_spread = sum(st.session_state.spreads[-10:]) / len(st.session_state.spreads[-10:])
-        if avg_spread >= 4.0: spread_boost = 0.03
+        if avg_spread >= 4.0:
+            spread_boost = 0.03
         
     card_concentration_bias = (true_count * 0.012) + spread_boost
     b_bias = card_concentration_bias
@@ -169,7 +193,8 @@ def get_hilo_card_bias():
 # --- 7. SNIPER ANALYZER ENGINE ---
 def analyze_engine(history_slice, base_threshold, min_rounds):
     clean = [x for x in history_slice if x in ['B', 'P']]
-    if len(clean) < min_rounds: return None
+    if len(clean) < min_rounds:
+        return None
     
     chop_index = calculate_choppiness(clean)
     dynamic_threshold = base_threshold + (chop_index * 3.0)
@@ -188,8 +213,10 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
         composite_p = (p_p_base * 0.05) + (p_p_mk * 0.45) + (p_p_dr * 0.40) + p_bias_card
         
     if is_fusion_match:
-        if composite_b > composite_p: composite_b += 0.08
-        else: composite_p += 0.08
+        if composite_b > composite_p:
+            composite_b += 0.08
+        else:
+            composite_p += 0.08
     
     win_rate_b = max(0, min(100, composite_b * 100))
     win_rate_p = max(0, min(100, composite_p * 100))
@@ -224,7 +251,8 @@ def evaluate_martingale_4steps(history, target_threshold, min_rounds):
     
     for i in range(min_rounds, len(history)):
         actual_result = history[i]
-        if actual_result not in ['B', 'P']: continue
+        if actual_result not in ['B', 'P']:
+            continue
         
         past_signal = analyze_engine(history[:i], target_threshold, min_rounds)
         if past_signal and past_signal["action"] in ["BANKER", "PLAYER"]:
@@ -237,10 +265,14 @@ def evaluate_martingale_4steps(history, target_threshold, min_rounds):
             })
             
             if is_win:
-                if curr_step == 1: w1 += 1
-                elif curr_step == 2: w2 += 1
-                elif curr_step == 3: w3 += 1
-                elif curr_step >= 4: w4 += 1
+                if curr_step == 1:
+                    w1 += 1
+                elif curr_step == 2:
+                    w2 += 1
+                elif curr_step == 3:
+                    w3 += 1
+                elif curr_step >= 4:
+                    w4 += 1
                 curr_step = 1
             else:
                 if curr_step >= 4:
@@ -261,41 +293,76 @@ with st.expander("ปรับแต่งเกณฑ์ความคม (Sni
         ["โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
         index=1
     )
-    if "ซูปเปอร์บู๊" in strategy: base_threshold, min_rounds = 52.0, 6
-    elif "สไนเปอร์" in strategy: base_threshold, min_rounds = 62.0, 8
-    else: base_threshold, min_rounds = 57.0, 8
+    if "ซูปเปอร์บู๊" in strategy:
+        base_threshold, min_rounds = 52.0, 6
+    elif "สไนเปอร์" in strategy:
+        base_threshold, min_rounds = 62.0, 8
+    else:
+        base_threshold, min_rounds = 57.0, 8
 
 # ---------------- HI-LO CARD COUNTER SECTION ----------------
 with st.expander("ระบบนับไพ่ Hi-Lo & Point Spread Monitor", expanded=False):
     _, _, _, running_cnt = get_hilo_card_bias()
     m_col1, m_col2 = st.columns(2)
-    with m_col1: st.metric("ไพ่ที่ออกไปแล้ว", f"{st.session_state.total_cards} ใบ")
-    with m_col2: st.metric("True Count Index", f"{running_cnt:.2f}")
+    with m_col1:
+        st.metric("ไพ่ที่ออกไปแล้ว", f"{st.session_state.total_cards} ใบ")
+    with m_col2:
+        st.metric("True Count Index", f"{running_cnt:.2f}")
 
     st.caption("จิ้มกดหน้าไพ่ทุกใบที่เปิดบนโต๊ะ:")
     ca, cb, cc, cd, ce = st.columns(5)
     with ca:
-        if st.button("10 / J / Q / K", use_container_width=True): st.session_state.card_counts[0] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("10 / J / Q / K", use_container_width=True):
+            st.session_state.card_counts[0] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
     with cb:
-        if st.button("A (1 แต้ม)", use_container_width=True): st.session_state.card_counts[1] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("A (1 แต้ม)", use_container_width=True):
+            st.session_state.card_counts[1] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
     with cc:
-        if st.button("2 แต้ม", use_container_width=True): st.session_state.card_counts[2] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("2 แต้ม", use_container_width=True):
+            st.session_state.card_counts[2] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
     with cd:
-        if st.button("3 แต้ม", use_container_width=True): st.session_state.card_counts[3] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("3 แต้ม", use_container_width=True):
+            st.session_state.card_counts[3] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
     with ce:
-        if st.button("4 แต้ม", use_container_width=True): st.session_state.card_counts[4] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("4 แต้ม", use_container_width=True):
+            st.session_state.card_counts[4] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
 
     cfa, cfb, cfc, cfd, cfe = st.columns(5)
     with cfa:
-        if st.button("5 แต้ม", use_container_width=True): st.session_state.card_counts[5] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("5 แต้ม", use_container_width=True):
+            st.session_state.card_counts[5] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
     with cfb:
-        if st.button("6 แต้ม", use_container_width=True): st.session_state.card_counts[6] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("6 แต้ม", use_container_width=True):
+            st.session_state.card_counts[6] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
     with cfc:
-        if st.button("7 แต้ม", use_container_width=True): st.session_state.card_counts[7] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("7 แต้ม", use_container_width=True):
+            st.session_state.card_counts[7] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
     with cfd:
-        if st.button("8 แต้ม", use_container_width=True): st.session_state.card_counts[8] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("8 แต้ม", use_container_width=True):
+            st.session_state.card_counts[8] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
     with cfe:
-        if st.button("9 แต้ม", use_container_width=True): st.session_state.card_counts[9] += 1; st.session_state.total_cards += 1; st.rerun()
+        if st.button("9 แต้ม", use_container_width=True):
+            st.session_state.card_counts[9] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
 
     if st.button("รีเซ็ตสำรับไพ่ทั้งหมด", use_container_width=True):
         st.session_state.card_counts = {i: 0 for i in range(10)}
@@ -359,7 +426,8 @@ with t1:
     if st.button("ย้อนกลับ", use_container_width=True):
         if st.session_state.history: 
             st.session_state.history.pop()
-            if st.session_state.spreads: st.session_state.spreads.pop()
+            if st.session_state.spreads:
+                st.session_state.spreads.pop()
             st.rerun()
 with t2:
     if st.button("ล้างขอนนี้", use_container_width=True):
@@ -393,10 +461,14 @@ st.divider()
 
 curr_step, w1, w2, w3, w4, losses, detailed_logs = evaluate_martingale_4steps(st.session_state.history, base_threshold, min_rounds)
 
-if curr_step == 1: st.markdown('<div class="step-badge">สถานะเดินเงิน: [ ไม้ที่ 1 ]</div>', unsafe_allow_html=True)
-elif curr_step == 2: st.markdown('<div class="step-badge" style="border-color:#FFB300; color:#FFB300;">สถานะเดินเงิน: [ ไม้ที่ 2 (ทบหนัก) ]</div>', unsafe_allow_html=True)
-elif curr_step == 3: st.markdown('<div class="step-badge" style="border-color:#FF9800; color:#FF9800;">สถานะเดินเงิน: [ ไม้ที่ 3 (จัดเต็ม) ]</div>', unsafe_allow_html=True)
-else: st.markdown('<div class="step-badge" style="border-color:#FF3D00; color:#FF3D00;">สถานะเดินเงิน: [ ไม้ที่ 4 (ไม้ตายสุดท้าย) ]</div>', unsafe_allow_html=True)
+if curr_step == 1:
+    st.markdown('<div class="step-badge">สถานะเดินเงิน: [ ไม้ที่ 1 ]</div>', unsafe_allow_html=True)
+elif curr_step == 2:
+    st.markdown('<div class="step-badge" style="border-color:#FFB300; color:#FFB300;">สถานะเดินเงิน: [ ไม้ที่ 2 (ทบหนัก) ]</div>', unsafe_allow_html=True)
+elif curr_step == 3:
+    st.markdown('<div class="step-badge" style="border-color:#FF9800; color:#FF9800;">สถานะเดินเงิน: [ ไม้ที่ 3 (จัดเต็ม) ]</div>', unsafe_allow_html=True)
+else:
+    st.markdown('<div class="step-badge" style="border-color:#FF3D00; color:#FF3D00;">สถานะเดินเงิน: [ ไม้ที่ 4 (ไม้ตายสุดท้าย) ]</div>', unsafe_allow_html=True)
 
 res = analyze_engine(st.session_state.history, base_threshold, min_rounds)
 
@@ -426,24 +498,4 @@ if res:
         if highest_conf >= 70.0 or res["is_fusion_match"]:
             st.markdown(f'<div class="kelly-card">**คำแนะนำการวางเดิมพัน:** ความมั่นใจสูงมาก **(แนะนำอัดหนัก 1.5x - 2.0x)**</div>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="kelly-card">**คำแนะนำการวางเดิมพัน:** เดินเงินปกติ **(1.0x มาตรฐาน)**</div>', unsafe_allow_html=True)
-
-    m1, m2 = st.columns(2)
-    with m1: st.metric("Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
-    with m2: st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
-else:
-    clean_count = len([x for x in st.session_state.history if x in ['B','P']])
-    st.info(f"กำลังสะสมข้อมูลซุ่มยิง: {clean_count}/{min_rounds} ตา")
-
-st.divider()
-
-st.write("**สถิติการเข้าไม้ขอนปัจจุบัน:**")
-s1, s2, s3, s4, s5 = st.columns(5)
-with s1: st.metric("ไม้ 1", f"{w1}")
-with s2: st.metric("ไม้ 2", f"{w2}")
-with s3: st.metric("ไม้ 3", f"{w3}")
-with s4: st.metric("ไม้ 4", f"{w4}")
-with s5: st.metric("แตก", f"{losses}")
-
-with st.expander("ประวัติย้อนหลังหลายขอน (Multi-Shoe History)"):
-    if s
+            st.markdown(f'<div class="kelly-card">**คำแนะนำการวางเดิมพัน:** เดินเงินปกติ **(1.0x มาตรฐาน)**</div>', unsafe_allow_html=Tr
