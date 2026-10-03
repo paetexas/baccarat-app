@@ -19,7 +19,6 @@ st.markdown("""
     .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
     .step-badge { background: linear-gradient(135deg, #1A1F2C, #252D3D); border: 2px solid #FFD700; border-radius: 14px; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; color: #FFD700; margin-bottom: 15px; }
     .kelly-card { background: #1E222D; border-left: 5px solid #00E676; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; }
-    .card-box { background: #1A1F2C; border: 1px solid #2D3748; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
     .footer-text { text-align: center; font-size: 11px; color: #666666; margin-top: 25px; }
 </style>
 """, unsafe_allow_html=True)
@@ -338,5 +337,14 @@ with st.expander("📝 บันทึกประวัติการเข้
         st.dataframe(df_logs, use_container_width=True)
     else: st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
 
+# ---------------- HOW TO USE SECTION (ADDED AT BOTTOM) ----------------
+with st.expander("📖 คู่มือและวิธีใช้งานระบบ (How to Use)", expanded=False):
+    st.markdown("""
+    **ขั้นตอนการใช้งานในแต่ละตา:**
+    1. **เช็คไพ่พิเศษ:** หากในตานั้นคุณเห็นไพ่เลข **4** หรือ ไพ่หน้าใหญ่/ป๊อก (**9, 10, J, Q, K**) เปิดออกมา ให้กดปุ่มนับไพ่ด้านบน *(`🃏 เห็นไพ่เลข 4` หรือ `👑 เห็นหน้าใหญ่/9`)* ตามที่พบจริง (หากตาไหนไม่มีให้ข้ามไป)
+    2. **บันทึกผลจริง:** เมื่อผลรอบนั้นออกแล้ว ให้กดบันทึกผลลัพธ์จริงที่ปุ่ม **🔵 PLAYER**, **🔴 BANKER** หรือ **🟢 TIE**
+    3. **ดูคำแนะนำตาถัดไป:** ระบบจะนำผลลัพธ์และแต้มไพ่ที่สะสมไปประมวลผลทันที เพื่อแสดงผลคำแนะนำการแทงและความมั่นใจในตาถัดไปให้ทราบ
+    """)
+
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-        
+    
