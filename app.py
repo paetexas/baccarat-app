@@ -65,7 +65,7 @@ def match_special_patterns(clean_history):
     if last4 == ['B', 'B', 'B', 'B']: return "🐉 มังกรแดง", 0.82, 0.18
     if last4 == ['P', 'P', 'P', 'P']: return "🐉 มังกรน้ำเงิน", 0.18, 0.82
     if last4 == ['B', 'B', 'P', 'P']: return "✂️ สองตัด", 0.75, 0.25
-    if last4 == ['P', 'P', 'B', 'B']: return "✂️ สองตัด", 0.25, 0.75
+    if last4 == ['P', 'P', 'B', 'B']: return "✂️️ สองตัด", 0.25, 0.75
     
     return None, 0.5, 0.5
 
@@ -125,7 +125,7 @@ def get_hilo_card_bias():
     b_bias = true_count * 0.008
     p_bias = -true_count * 0.008
     
-    return max(-0.06, min(0.06, p_bias)), max(-0.06, min(0.06, b_bias)), true_count
+    return max(-0.06, min(0.06, p_bias)), max(-0.06, min(0.06, b_bias)), true_count, running_count
 
 # --- 7. MAIN ANALYZER ENGINE ---
 def analyze_engine(history_slice, base_threshold, min_rounds):
@@ -139,7 +139,7 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
     p_b_mk, p_p_mk = markov_chain_prob(clean)
     p_b_dr, p_p_dr = derived_roads_engine(clean)
     pat_name, p_b_pat, p_p_pat = match_special_patterns(clean)
-    p_bias_card, b_bias_card, true_count = get_hilo_card_bias()
+    p_bias_card, b_bias_card, true_count, _ = get_hilo_card_bias()
     
     if pat_name:
         composite_b = (p_b_base * 0.05) + (p_b_mk * 0.35) + (p_b_dr * 0.35) + (p_b_pat * 0.25) + b_bias_card
@@ -221,9 +221,15 @@ with st.expander("⚙️ ปรับแต่งเกณฑ์วิเคร�
     elif "สายชัวร์" in strategy: base_threshold, min_rounds = 65.0, 10
     else: base_threshold, min_rounds = 60.0, 10
 
-# ---------------- HI-LO CARD COUNTER SECTION (WITH CARD NAMES) ----------------
+# ---------------- HI-LO CARD COUNTER SECTION (WITH LIVE MONITOR) ----------------
 with st.expander("🃏 ระบบนับไพ่ Hi-Lo (กดเลือกหน้าไพ่ที่ออกจริงในตา)", expanded=True):
-    st.caption("แตะปุ่มหน้าไพ่ที่เปิดบนโต๊ะ (ระบบจะแปลงเป็นแต้มคำนวณและนับรวมให้อัตโนมัติ):")
+    # แสดงสถานะสดๆ ให้เห็นว่ากดแล้วตัวเลขขยับจริง
+    _, _, _, running_cnt = get_hilo_card_bias()
+    m_col1, m_col2 = st.columns(2)
+    with m_col1: st.metric("🎴 ไพ่ที่ออกไปแล้วทั้งหมด", f"{st.session_state.total_cards} ใบ")
+    with m_col2: st.metric("📊 Running Count (ความได้เปรียบ)", f"{running_cnt:.2f}")
+
+    st.caption("แตะปุ่มหน้าไพ่ที่เปิดบนโต๊ะ (ระบบจะนับรวมและอัปเดตตัวเลขด้านบนทันที):")
     
     # แถวที่ 1: หน้าคนและ A (10, J, Q, K, A)
     ca, cb, cc, cd, ce = st.columns(5)
@@ -371,10 +377,10 @@ with st.expander("📝 บันทึกประวัติการเข้
 with st.expander("📖 คู่มือและวิธีใช้งานระบบ (How to Use)", expanded=True):
     st.markdown("""
     **ขั้นตอนการใช้งานระบบนับไพ่และ AI วิเคราะห์บาคาร่า:**
-    1. **กดเลือกหน้าไพ่ที่เปิดบนโต๊ะ:** เมื่อไพ่เปิดออกมา (ไม่ว่าจะเป็น 2 ใบแรก หรือใบที่ 3) ให้กดปุ่มหน้าไพ่ตรงตัวได้ทันที เช่น ออก `J` หรือ `K` ให้กดปุ่ม **`10 / J / Q / K`**, ออก `A` ให้กดปุ่ม **`A (1 แต้ม)`**, หรือออกเลขอื่นๆ ให้กดตามตัวเลขหน้าไพ่ได้เลย
+    1. **กดเลือกหน้าไพ่ที่เปิดบนโต๊ะ:** เมื่อไพ่เปิดออกมา (ไม่ว่าจะเป็น 2 ใบแรก หรือใบที่ 3) ให้กดปุ่มหน้าไพ่ตรงตัวได้ทันที สังเกตตัวเลข **"ไพ่ที่ออกไปแล้วทั้งหมด"** จะเพิ่มขึ้นทันทีเมื่อกด
     2. **บันทึกผลแพ้-ชนะ:** หลังจากทราบผลสรุปตานั้น ให้กดบันทึกผลจริง **`🔵 PLAYER`**, **`🔴 BANKER`** หรือ **`🟢 TIE`** ด้านล่าง
     3. **ดูคำแนะนำตาถัดไป:** ระบบจะนำสถิติทั้งหมดมาประมวลผลคำแนะนำการแทงให้คุณอัตโนมัติ
     """)
 
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-    
+            
