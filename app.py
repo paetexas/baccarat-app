@@ -287,87 +287,90 @@ def evaluate_martingale_4steps(history, target_threshold, min_rounds):
 st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [SNIPER V2]</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic (Point Spread & Flash Alerts)</div>', unsafe_allow_html=True)
 
-with st.expander("ปรับแต่งเกณฑ์ความคม (Sniper Settings)", expanded=False):
-    strategy = st.radio(
-        "เลือกโหมดการยิง:",
-        ["โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
-        index=1
-    )
-    if "ซูปเปอร์บู๊" in strategy:
-        base_threshold, min_rounds = 52.0, 6
-    elif "สไนเปอร์" in strategy:
-        base_threshold, min_rounds = 62.0, 8
-    else:
-        base_threshold, min_rounds = 57.0, 8
+# ---------------- SETTINGS SECTION ----------------
+st.markdown("### ปรับแต่งเกณฑ์ความคม (Sniper Settings)")
+strategy = st.selectbox(
+    "เลือกโหมดการยิง:",
+    ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
+    index=0
+)
+if "ซูปเปอร์บู๊" in strategy:
+    base_threshold, min_rounds = 52.0, 6
+elif "สไนเปอร์" in strategy:
+    base_threshold, min_rounds = 62.0, 8
+else:
+    base_threshold, min_rounds = 57.0, 8
+
+st.divider()
 
 # ---------------- HI-LO CARD COUNTER SECTION ----------------
-with st.expander("ระบบนับไพ่ Hi-Lo & Point Spread Monitor", expanded=False):
-    _, _, _, running_cnt = get_hilo_card_bias()
-    m_col1, m_col2 = st.columns(2)
-    with m_col1:
-        st.metric("ไพ่ที่ออกไปแล้ว", f"{st.session_state.total_cards} ใบ")
-    with m_col2:
-        st.metric("True Count Index", f"{running_cnt:.2f}")
+st.markdown("### ระบบนับไพ่ Hi-Lo & Point Spread Monitor")
+_, _, _, running_cnt = get_hilo_card_bias()
+m_col1, m_col2 = st.columns(2)
+with m_col1:
+    st.metric("ไพ่ที่ออกไปแล้ว", f"{st.session_state.total_cards} ใบ")
+with m_col2:
+    st.metric("True Count Index", f"{running_cnt:.2f}")
 
-    st.caption("จิ้มกดหน้าไพ่ทุกใบที่เปิดบนโต๊ะ:")
-    ca, cb, cc, cd, ce = st.columns(5)
-    with ca:
-        if st.button("10 / J / Q / K", use_container_width=True):
-            st.session_state.card_counts[0] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-    with cb:
-        if st.button("A (1 แต้ม)", use_container_width=True):
-            st.session_state.card_counts[1] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-    with cc:
-        if st.button("2 แต้ม", use_container_width=True):
-            st.session_state.card_counts[2] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-    with cd:
-        if st.button("3 แต้ม", use_container_width=True):
-            st.session_state.card_counts[3] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-    with ce:
-        if st.button("4 แต้ม", use_container_width=True):
-            st.session_state.card_counts[4] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-
-    cfa, cfb, cfc, cfd, cfe = st.columns(5)
-    with cfa:
-        if st.button("5 แต้ม", use_container_width=True):
-            st.session_state.card_counts[5] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-    with cfb:
-        if st.button("6 แต้ม", use_container_width=True):
-            st.session_state.card_counts[6] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-    with cfc:
-        if st.button("7 แต้ม", use_container_width=True):
-            st.session_state.card_counts[7] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-    with cfd:
-        if st.button("8 แต้ม", use_container_width=True):
-            st.session_state.card_counts[8] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-    with cfe:
-        if st.button("9 แต้ม", use_container_width=True):
-            st.session_state.card_counts[9] += 1
-            st.session_state.total_cards += 1
-            st.rerun()
-
-    if st.button("รีเซ็ตสำรับไพ่ทั้งหมด", use_container_width=True):
-        st.session_state.card_counts = {i: 0 for i in range(10)}
-        st.session_state.total_cards = 0
+st.caption("จิ้มกดหน้าไพ่ทุกใบที่เปิดบนโต๊ะ:")
+ca, cb, cc, cd, ce = st.columns(5)
+with ca:
+    if st.button("10 / J / Q / K", use_container_width=True):
+        st.session_state.card_counts[0] += 1
+        st.session_state.total_cards += 1
         st.rerun()
+with cb:
+    if st.button("A (1 แต้ม)", use_container_width=True):
+        st.session_state.card_counts[1] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+with cc:
+    if st.button("2 แต้ม", use_container_width=True):
+        st.session_state.card_counts[2] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+with cd:
+    if st.button("3 แต้ม", use_container_width=True):
+        st.session_state.card_counts[3] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+with ce:
+    if st.button("4 แต้ม", use_container_width=True):
+        st.session_state.card_counts[4] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+
+cfa, cfb, cfc, cfd, cfe = st.columns(5)
+with cfa:
+    if st.button("5 แต้ม", use_container_width=True):
+        st.session_state.card_counts[5] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+with cfb:
+    if st.button("6 แต้ม", use_container_width=True):
+        st.session_state.card_counts[6] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+with cfc:
+    if st.button("7 แต้ม", use_container_width=True):
+        st.session_state.card_counts[7] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+with cfd:
+    if st.button("8 แต้ม", use_container_width=True):
+        st.session_state.card_counts[8] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+with cfe:
+    if st.button("9 แต้ม", use_container_width=True):
+        st.session_state.card_counts[9] += 1
+        st.session_state.total_cards += 1
+        st.rerun()
+
+if st.button("รีเซ็ตสำรับไพ่ทั้งหมด", use_container_width=True):
+    st.session_state.card_counts = {i: 0 for i in range(10)}
+    st.session_state.total_cards = 0
+    st.rerun()
 
 st.divider()
 
@@ -497,4 +500,9 @@ if res:
 
     m1, m2 = st.columns(2)
     with m1:
-          
+        st.metric("Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
+    with m2:
+        st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
+else:
+    clean_count = len([x for x in st.session_state.history if x in ['B','P']])
+        
