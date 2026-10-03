@@ -8,7 +8,7 @@ st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
     
-    /* General Button Styling */
+    /* สไตล์ปุ่มทั่วไปอื่นๆ */
     div[data-testid="column"] button {
         height: 3.2em !important; font-size: 13px !important;
         font-weight: 800 !important; border-radius: 10px !important;
@@ -16,11 +16,6 @@ st.markdown("""
         color: white !important; border: none !important;
     }
     
-    /* กำหนดสีเฉพาะปุ่มบันทึกผล 3 ปุ่มแรก */
-    div.row-widget.stHorizontal:nth-of-type(1) > div:nth-child(1) button { background-color: #1E88E5 !important; }
-    div.row-widget.stHorizontal:nth-of-type(1) > div:nth-child(2) button { background-color: #E53935 !important; }
-    div.row-widget.stHorizontal:nth-of-type(1) > div:nth-child(3) button { background-color: #43A047 !important; }
-
     .stMetric { background: linear-gradient(145deg, #161B22, #1E2430); padding: 10px; border-radius: 12px; border: 1px solid #2D3748; }
     .app-title { text-align: center; font-size: 26px; font-weight: 900; background: linear-gradient(90deg, #FFD700, #FF3D00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
@@ -328,27 +323,31 @@ st.divider()
 
 st.markdown("### บันทึกผลจริงตาต่อตา")
 
-# บังคับสีปุ่มบันทึกผลผ่าน HTML/Markdown โดยตรง
+# ใช้เทคนิคกำหนดสไตล์ผ่านคลาสเฉพาะตัวด้วย HTML Injection ตรงปุ่มบันทึกผล
 st.markdown("""
 <style>
-    div[data-testid="column"]:nth-of-type(1) button[kind="secondary"] { background-color: #1E88E5 !important; border: none !important; color: white !important; }
-    div[data-testid="column"]:nth-of-type(2) button[kind="secondary"] { background-color: #E53935 !important; border: none !important; color: white !important; }
-    div[data-testid="column"]:nth-of-type(3) button[kind="secondary"] { background-color: #43A047 !important; border: none !important; color: white !important; }
+    /* บังคับสีปุ่มเฉพาะกลุ่มบันทึกผล 3 ปุ่มแรก */
+    div.element-container:has(#btn-player-marker) + div button { background-color: #1E88E5 !important; color: white !important; }
+    div.element-container:has(#btn-banker-marker) + div button { background-color: #E53935 !important; color: white !important; }
+    div.element-container:has(#btn-tie-marker) + div button { background-color: #43A047 !important; color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
 sc1, sc2, sc3 = st.columns(3)
 with sc1:
+    st.markdown('<div id="btn-player-marker"></div>', unsafe_allow_html=True)
     if st.button("PLAYER ชนะ", use_container_width=True, key="btn_player"):
         st.session_state.history.append('P')
         st.session_state.spreads.append(2)
         st.rerun()
 with sc2:
+    st.markdown('<div id="btn-banker-marker"></div>', unsafe_allow_html=True)
     if st.button("BANKER ชนะ", use_container_width=True, key="btn_banker"):
         st.session_state.history.append('B')
         st.session_state.spreads.append(2)
         st.rerun()
 with sc3:
+    st.markdown('<div id="btn-tie-marker"></div>', unsafe_allow_html=True)
     if st.button("TIE เสมอ", use_container_width=True, key="btn_tie"):
         st.session_state.history.append('T')
         st.rerun()
@@ -451,4 +450,4 @@ st.markdown("- สามารถกด **บันทึกขอน** เม�
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-        
+    
