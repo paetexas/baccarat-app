@@ -1,29 +1,30 @@
 import streamlit as st
 import numpy as np
 
-# ตั้งค่าหน้าจอสำหรับมือถือ
-st.set_page_config(page_title="Baccarat Pro Analytics", layout="centered")
+# ตั้งค่าหน้าจอ
+st.set_page_config(page_title="Baccarat AI Pro", layout="centered")
 
-# Custom CSS ตกแต่งปุ่มและ UI
+# Custom CSS ตกแต่งปุ่มและ UI สำหรับมือถือโดยเฉพาะ
 st.markdown("""
 <style>
-    .stButton>button {
-        height: 3em;
-        font-size: 18px !important;
-        font-weight: bold;
-        border-radius: 12px;
+    /* ปรับแต่งปุ่มกดบันทึก */
+    div[data-testid="column"] button {
+        height: 3.5em !important;
+        font-size: 16px !important;
+        font-weight: bold !important;
+        border-radius: 10px !important;
+        padding: 0px !important;
     }
-    .metric-card {
-        background-color: #1E222D;
+    
+    /* กล่องแนะนำ AI */
+    .result-box {
         padding: 15px;
-        border-radius: 10px;
+        border-radius: 12px;
         text-align: center;
-        border: 1px solid #2B2E3A;
+        margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
-
-st.title("🎲 Baccarat Pro AI Analytics")
 
 # Initialize Session State
 if "history" not in st.session_state:
@@ -31,7 +32,6 @@ if "history" not in st.session_state:
 
 # --- CORE ALGORITHM ---
 def markov_chain_prob(history):
-    """2nd Order Markov Chain Engine"""
     clean = [x for x in history if x in ['B', 'P']]
     if len(clean) < 3:
         return 0.5068, 0.4932
@@ -53,12 +53,10 @@ def markov_chain_prob(history):
     return b_next / total, p_next / total
 
 def derived_roads_bias(history):
-    """Simulated Derived Roads Logic"""
     clean = [x for x in history if x in ['B', 'P']]
     if len(clean) < 6:
         return 0.5, 0.5
     
-    # Check for ping-pong or dragon trends
     streaks = []
     curr, count = clean[0], 1
     for x in clean[1:]:
@@ -71,11 +69,10 @@ def derived_roads_bias(history):
     
     avg_streak = np.mean(streaks[-3:]) if len(streaks) >= 3 else 1
     
-    # Trend Analysis
-    if avg_streak > 2.2: # Dragon Bias
+    if avg_streak > 2.2: # Dragon
         last = clean[-1]
         return (0.65, 0.35) if last == 'B' else (0.35, 0.65)
-    elif avg_streak < 1.4: # Ping-Pong Bias
+    elif avg_streak < 1.4: # Ping-Pong
         last = clean[-1]
         return (0.35, 0.65) if last == 'B' else (0.65, 0.35)
         
@@ -86,45 +83,60 @@ def analyze_engine(history):
     if len(clean) < 5:
         return None
     
-    # 1. Base Probabilities (Baccarat standard House Edge)
     p_b_base, p_p_base = 0.5068, 0.4932
-    
-    # 2. Markov Chain
     p_b_mk, p_p_mk = markov_chain_prob(clean)
-    
-    # 3. Derived Roads Simulation
     p_b_rd, p_p_rd = derived_roads_bias(clean)
     
-    # Weighted Composite Probabilities
     composite_b = (p_b_base * 0.2) + (p_b_mk * 0.5) + (p_b_rd * 0.3)
     composite_p = (p_p_base * 0.2) + (p_p_mk * 0.5) + (p_p_rd * 0.3)
     
-    # Expected Value (EV) Filter
     ev_b = (composite_b * 0.95) - (composite_p * 1.0)
     ev_p = (composite_p * 1.00) - (composite_b * 1.0)
     
-    # Signal Decision
     if ev_b > 0.02 and composite_b > composite_p:
         action = "BANKER"
-        confidence = composite_b * 100
     elif ev_p > 0.02 and composite_p > composite_b:
         action = "PLAYER"
-        confidence = composite_p * 100
     else:
         action = "SKIP"
-        confidence = max(composite_b, composite_p) * 100
         
     return {
         "action": action,
         "conf_b": composite_b * 100,
         "conf_p": composite_p * 100,
         "ev_b": ev_b,
-        "ev_p": ev_p,
-        "confidence": confidence
+        "ev_p": ev_p
     }
 
-# --- CONTROLS SECTION ---
-st.subheader("บันทึกผลเค้าไพ่")
+# ---------------- UI LAYOUT (TOP TO BOTTOM) ----------------
+
+st.caption("🎲 Baccarat AI Real-Time Analytics")
+
+# 1. ANALYTICS DISPLAY (ขึ้นก่อนเลย อยู่บนสุด)
+res = analyze_engine(st.session_state.history)
+
+if res:
+    action = res["action"]
+    if action == "BANKER":
+        st.error(f"### 🔴 แทง BANKER ({res['conf_b']:.1f}%)")
+    elif action == "PLAYER":
+        st.info(f"### 🔵 แทง PLAYER ({res['conf_p']:.1f}%)")
+    else:
+        st.warning("### ⚪ ข้ามรอบนี้ (SKIP)")
+        
+    # Stats Compact
+    m1, m2 = st.columns(2)
+    with m1:
+        st.metric("🔴 Banker", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
+    with m2:
+        st.metric("🔵 Player", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
+else:
+    st.info(f"⏳ ใส่ข้อมูลอีก {max(0, 5 - len([x for x in st.session_state.history if x in ['B','P']]))} ตา เพื่อเริ่มคำนวณ")
+
+st.divider()
+
+# 2. BUTTONS INPUT (ปุ่มกดแนวนอน 3 ปุ่ม เรียงข้างกัน)
+st.write("**กดบันทึกผลตาถัดไป:**")
 c1, c2, c3 = st.columns(3)
 
 with c1:
@@ -142,46 +154,20 @@ with c3:
         st.session_state.history.append('T')
         st.rerun()
 
-# Tools Row
+# 3. HISTORY & CONTROL TOOLS (ด้านล่างสุด)
+st.write("---")
+# แสดงประวัติเค้าไพ่ล่าสุดแบบวงกลม/สี
+if st.session_state.history:
+    recent = " ".join(st.session_state.history[-10:])
+    st.write(f"**สถิติ ({len(st.session_state.history)} ตา):** {recent}")
+
 t1, t2 = st.columns(2)
 with t1:
-    if st.button("↩️ ย้อนกลับ (Undo)", use_container_width=True):
+    if st.button("↩️ ย้อนกลับ", use_container_width=True):
         if st.session_state.history:
             st.session_state.history.pop()
             st.rerun()
 with t2:
-    if st.button("🔄 ล้างขอน (Reset)", use_container_width=True):
+    if st.button("🔄 ล้างขอน", use_container_width=True):
         st.session_state.history = []
         st.rerun()
-
-# --- DISPLAY HISTORY ---
-st.divider()
-st.write(f"**จำนวนตาที่บันทึก:** {len(st.session_state.history)} ตา")
-if st.session_state.history:
-    st.write("**สถิติจด:**", " - ".join(st.session_state.history[-15:]))
-
-# --- ANALYTICS DISPLAY ---
-res = analyze_engine(st.session_state.history)
-
-if res:
-    st.divider()
-    st.subheader("🎯 ผลการวิเคราะห์ AI (รอบถัดไป)")
-    
-    # Display Recommendation Box
-    action = res["action"]
-    if action == "BANKER":
-        st.error(f"### 🔴 แทง BANKER (มั่นใจ {res['conf_b']:.1f}%)")
-    elif action == "PLAYER":
-        st.info(f"### 🔵 แทง PLAYER (มั่นใจ {res['conf_p']:.1f}%)")
-    else:
-        st.warning("### ⚪ ข้ามรอบนี้ (SKIP) - ความเสี่ยงสูง")
-        
-    # Metrics
-    m1, m2 = st.columns(2)
-    with m1:
-        st.metric("🔴 Banker Prob / EV", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.3f}")
-    with m2:
-        st.metric("🔵 Player Prob / EV", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.3f}")
-
-else:
-    st.info(f"⏳ กรุณาบันทึกข้อมูลอย่างน้อย 5 ตาก่อนเริ่มวิเคราะห์ (ปัจจุบัน: {len(st.session_state.history)}/5)")
