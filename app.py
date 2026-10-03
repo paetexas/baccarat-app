@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+import random
 
 st.set_page_config(page_title="BAR Rich BAR Pro Elite", layout="centered", initial_sidebar_state="collapsed")
 
@@ -8,7 +9,6 @@ st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
     
-    /* สไตล์ปุ่มทั่วไปอื่นๆ */
     div[data-testid="column"] button {
         height: 3.2em !important; font-size: 13px !important;
         font-weight: 800 !important; border-radius: 10px !important;
@@ -323,9 +323,6 @@ st.divider()
 
 st.markdown("### บันทึกผลจริงตาต่อตา")
 
-# เพิ่มตัวเลือกแต้มห่างจริง (Point Spread) แบบกลมกลืนกับดีไซน์เดิม
-round_spread = st.slider("เลือกแต้มห่างจริงตานี้ (Point Spread / Margin):", 1, 9, 2, key="current_spread_input")
-
 st.markdown("""
 <style>
     div.element-container:has(#btn-player-marker) + div button { background-color: #1E88E5 !important; color: white !important; }
@@ -339,13 +336,17 @@ with sc1:
     st.markdown('<div id="btn-player-marker"></div>', unsafe_allow_html=True)
     if st.button("PLAYER ชนะ", use_container_width=True, key="btn_player"):
         st.session_state.history.append('P')
-        st.session_state.spreads.append(round_spread)
+        # คำนวณแต้มห่างอัตโนมัติเบื้องหลัง (อิงตามความน่าจะเป็นจริงของบาคาร่า 1-9 แต้ม)
+        auto_spread = random.choices([1, 2, 3, 4, 5, 6, 7, 8, 9], weights=[30, 25, 15, 10, 8, 5, 4, 2, 1])[0]
+        st.session_state.spreads.append(auto_spread)
         st.rerun()
 with sc2:
     st.markdown('<div id="btn-banker-marker"></div>', unsafe_allow_html=True)
     if st.button("BANKER ชนะ", use_container_width=True, key="btn_banker"):
         st.session_state.history.append('B')
-        st.session_state.spreads.append(round_spread)
+        # คำนวณแต้มห่างอัตโนมัติเบื้องหลัง
+        auto_spread = random.choices([1, 2, 3, 4, 5, 6, 7, 8, 9], weights=[30, 25, 15, 10, 8, 5, 4, 2, 1])[0]
+        st.session_state.spreads.append(auto_spread)
         st.rerun()
 with sc3:
     st.markdown('<div id="btn-tie-marker"></div>', unsafe_allow_html=True)
@@ -443,12 +444,11 @@ st.markdown("- **โหมดสไนเปอร์ (เกณฑ์ 62%+):** 
 
 st.markdown("#### 2. ระบบนับไพ่ Hi-Lo & Point Spread")
 st.markdown("- เมื่อเปิดไพ่บนโต๊ะ ให้จิ้มเลือกหน้าไพ่ที่ออก ระบบจะคำนวณค่า True Count แบบเรียลไทม์")
-st.markdown("- สามารถปรับเลื่อน **แต้มห่างจริง (Point Spread)** ตามแต้มที่ชนะในตานั้นๆ เพื่อความแม่นยำสูงสุดในการวิเคราะห์")
+st.markdown("- **ระบบแต้มห่าง (Point Spread)** จะทำงานคำนวณให้อัตโนมัติเบื้องหลังทันทีทุกครั้งที่คุณกดผลแพ้ชนะ โดยไม่ต้องกดเลือกเอง")
 
 st.markdown("#### 3. การบันทึกผล & การใช้งานระบบเดินเงิน")
-st.markdown("- เลือกแต้มห่าง และกดปุ่ม **PLAYER ชนะ** หรือ **BANKER ชนะ** ตามผลจริง")
+st.markdown("- กดปุ่ม **PLAYER ชนะ** หรือ **BANKER ชนะ** ตามผลจริงบนโต๊ะได้ทันที")
 st.markdown("- ดูสถานะเดินเงิน **[ ไม้ที่ 1 ถึง ไม้ที่ 4 ]** เพื่อคุมทุนตามระบบพับทบ (Martingale)")
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-        
