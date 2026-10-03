@@ -479,12 +479,10 @@ if res:
         st.success(f"ตรวจพบเค้าไพ่พิเศษ: **{res['pat_name']}**")
         
     if res["is_fusion_match"]:
-        st.markdown('''
-        <div class="flash-alert">
-            <h2 style="color: #FFD700; margin: 0; font-weight: 900;">โคตรไม้เด็ด [MATRIX FUSION ALERT]</h2>
-            <p style="color: #FF3D00; margin: 5px 0 0 0; font-weight: 800; font-size: 16px;">ตารางหลักและตารางลูกพุ่งตรงกัน 100% - จังหวะทำเงินระดับพระกาฬ!</p>
-        </div>
-        ''', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="flash-alert"><h2 style="color: #FFD700; margin: 0; font-weight: 900;">โคตรไม้เด็ด [MATRIX FUSION ALERT]</h2><p style="color: #FF3D00; margin: 5px 0 0 0; font-weight: 800; font-size: 16px;">ตารางหลักและตารางลูกพุ่งตรงกัน 100% - จังหวะทำเงินระดับพระกาฬ!</p></div>',
+            unsafe_allow_html=True
+        )
 
     if action == "BANKER":
         st.error(f"### ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
@@ -502,4 +500,4 @@ if res:
             )
         else:
             st.markdown(
-                '<div class="kelly-card">**คำแนะนำการวางเดิมพัน
+                '<div class="kelly-card">**คำแนะนำการวางเดิมพัน:** เดินเงินปกติ <b>(1.
