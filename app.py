@@ -323,10 +323,11 @@ st.divider()
 
 st.markdown("### บันทึกผลจริงตาต่อตา")
 
-# ใช้เทคนิคกำหนดสไตล์ผ่านคลาสเฉพาะตัวด้วย HTML Injection ตรงปุ่มบันทึกผล
+# เพิ่มตัวเลือกแต้มห่างจริง (Point Spread) แบบกลมกลืนกับดีไซน์เดิม
+round_spread = st.slider("เลือกแต้มห่างจริงตานี้ (Point Spread / Margin):", 1, 9, 2, key="current_spread_input")
+
 st.markdown("""
 <style>
-    /* บังคับสีปุ่มเฉพาะกลุ่มบันทึกผล 3 ปุ่มแรก */
     div.element-container:has(#btn-player-marker) + div button { background-color: #1E88E5 !important; color: white !important; }
     div.element-container:has(#btn-banker-marker) + div button { background-color: #E53935 !important; color: white !important; }
     div.element-container:has(#btn-tie-marker) + div button { background-color: #43A047 !important; color: white !important; }
@@ -338,13 +339,13 @@ with sc1:
     st.markdown('<div id="btn-player-marker"></div>', unsafe_allow_html=True)
     if st.button("PLAYER ชนะ", use_container_width=True, key="btn_player"):
         st.session_state.history.append('P')
-        st.session_state.spreads.append(2)
+        st.session_state.spreads.append(round_spread)
         st.rerun()
 with sc2:
     st.markdown('<div id="btn-banker-marker"></div>', unsafe_allow_html=True)
     if st.button("BANKER ชนะ", use_container_width=True, key="btn_banker"):
         st.session_state.history.append('B')
-        st.session_state.spreads.append(2)
+        st.session_state.spreads.append(round_spread)
         st.rerun()
 with sc3:
     st.markdown('<div id="btn-tie-marker"></div>', unsafe_allow_html=True)
@@ -438,16 +439,16 @@ st.markdown("### 📖 คู่มือการใช้งานเชิง�
 st.markdown("#### 1. การเลือกโหมดการยิง (Sniper Settings)")
 st.markdown("- **โหมดมาตรฐาน (เกณฑ์ 57%+):** เหมาะสำหรับการเล่นปกติ ให้ความสมดุลระหว่างความถี่ในการออกไม้และความแม่นยำ")
 st.markdown("- **โหมดซุปเปอร์บู๊ (เกณฑ์ 52%+):** เหมาะสำหรับคนชอบออกไม้ยับๆ ทำรอบไว ออกสัญญาณถี่ขึ้น")
-st.markdown("- **โหมดสไนเปอร์ (เกณฑ์ 62%+):** เน้นความชัวร์ระดับพรีเมียม กรองความเสี่ยงสูง ออกไม้ยากแต่แม่นยำสูงมาก")
+st.markdown("- **โหมดสไนเปอร์ (เกณฑ์ 62%+):** เน้นความชัวร์ระดับพรีเมียม กรองความเสี่ยงสูง ออกไม้ายากแต่แม่นยำสูงมาก")
 
 st.markdown("#### 2. ระบบนับไพ่ Hi-Lo & Point Spread")
-st.markdown("- เมื่อเปิดไพ่บนโต๊ะ ให้จิ้มเลือกหน้าไพ่ที่ออก (เช่น 10/J/Q/K หรือ A) ระบบจะนำไปคำนวณค่า True Count แบบเรียลไทม์เพื่อปรับค่าความน่าจะเป็นของขอนไพ่นั้นๆ")
+st.markdown("- เมื่อเปิดไพ่บนโต๊ะ ให้จิ้มเลือกหน้าไพ่ที่ออก ระบบจะคำนวณค่า True Count แบบเรียลไทม์")
+st.markdown("- สามารถปรับเลื่อน **แต้มห่างจริง (Point Spread)** ตามแต้มที่ชนะในตานั้นๆ เพื่อความแม่นยำสูงสุดในการวิเคราะห์")
 
 st.markdown("#### 3. การบันทึกผล & การใช้งานระบบเดินเงิน")
-st.markdown("- กดปุ่ม **PLAYER ชนะ** หรือ **BANKER ชนะ** ตามผลจริง เพื่อให้ระบบคำนวณสัญญาณตาถัดไป")
-st.markdown("- ดูสถานะเดินเงิน **[ ไม้ที่ 1 ถึง ไม้ที่ 4 ]** เพื่อคุมทุนตามระบบพับทบ (Martingale) หากชนะจะรีเซ็ตกลับไม้ 1 อัตโนมัติ")
-st.markdown("- สามารถกด **บันทึกขอน** เมื่อจบขอน เพื่อเก็บบันทึกสถิติภาพรวมสะสมไว้ดูย้อนหลังได้")
+st.markdown("- เลือกแต้มห่าง และกดปุ่ม **PLAYER ชนะ** หรือ **BANKER ชนะ** ตามผลจริง")
+st.markdown("- ดูสถานะเดินเงิน **[ ไม้ที่ 1 ถึง ไม้ที่ 4 ]** เพื่อคุมทุนตามระบบพับทบ (Martingale)")
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-    
+        
