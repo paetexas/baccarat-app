@@ -38,6 +38,17 @@ st.markdown("""
         color: #AAAAAA;
         margin-bottom: 10px;
     }
+    .step-badge {
+        background-color: #1E222D;
+        border: 2px solid #FFD700;
+        border-radius: 10px;
+        padding: 10px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        color: #FFD700;
+        margin-bottom: 15px;
+    }
     .footer-text {
         text-align: center;
         font-size: 11px;
@@ -97,8 +108,6 @@ def derived_roads_bias(history):
 
 def analyze_engine(history_slice):
     clean = [x for x in history_slice if x in ['B', 'P']]
-    
-    # เริ่มคำนวณตั้งแต่ตาที่ 10 เป็นต้นไป
     if len(clean) < 10:
         return None
     
@@ -115,7 +124,6 @@ def analyze_engine(history_slice):
     ev_b = (composite_b * 0.95) - (composite_p * 1.0)
     ev_p = (composite_p * 1.00) - (composite_b * 1.0)
     
-    # ปรับเกณฑ์ส่งสัญญาณลงมาที่ Win Rate >= 63.0% เพื่อให้ออกไม้ถี่และต่อเนื่องขึ้น
     if win_rate_b >= 63.0 and ev_b > 0.01:
         action = "BANKER"
     elif win_rate_p >= 63.0 and ev_p > 0.01:
@@ -131,9 +139,11 @@ def analyze_engine(history_slice):
         "ev_p": ev_p
     }
 
-# --- WIN / LOSS TRACKER ---
-def evaluate_performance(history):
-    wins, losses = 0, 0
+# --- MARTINGALE STEP & WIN/LOSS EVALUATOR ---
+def evaluate_martingale(history):
+    curr_step = 1  # เริ่มต้นไม้ 1
+    w1, w2, w3, losses = 0, 0, 0, 0
+    
     for i in range(10, len(history)):
         actual_result = history[i]
         if actual_result not in ['B', 'P']:
@@ -142,12 +152,21 @@ def evaluate_performance(history):
         past_signal = analyze_engine(history[:i])
         if past_signal and past_signal["action"] in ["BANKER", "PLAYER"]:
             pred = past_signal["action"]
-            if (pred == "BANKER" and actual_result == 'B') or (pred == "PLAYER" and actual_result == 'P'):
-                wins += 1
+            is_win = (pred == "BANKER" and actual_result == 'B') or (pred == "PLAYER" and actual_result == 'P')
+            
+            if is_win:
+                if curr_step == 1: w1 += 1
+                elif curr_step == 2: w2 += 1
+                elif curr_step >= 3: w3 += 1
+                curr_step = 1  # ชนะ -> รีเซ็ตกลับไม้ 1
             else:
-                losses += 1
-                
-    return wins, losses
+                if curr_step >= 3:
+                    losses += 1
+                    curr_step = 1  # หลุด 3 ไม้ -> รีเซ็ตกลับไม้ 1
+                else:
+                    curr_step += 1  # ผิด -> ทบไม้ถัดไป
+                    
+    return curr_step, w1, w2, w3, losses
 
 # ---------------- HEADER ----------------
 
@@ -190,15 +209,26 @@ if st.session_state.history:
 
 st.divider()
 
-# ---------------- 2. กล่องแสดงผลวิเคราะห์สัญญาณ ----------------
+# คำนวณสถานะทบไม้
+curr_step, w1, w2, w3, losses = evaluate_martingale(st.session_state.history)
+
+# ---------------- 2. แสดงป้ายสถานะไม้ตลอดเวลา ----------------
+if curr_step == 1:
+    st.markdown('<div class="step-badge">💰 สถานะปัจจุบัน: [ ไม้ที่ 1 ]</div>', unsafe_allow_html=True)
+elif curr_step == 2:
+    st.markdown('<div class="step-badge" style="border-color:#FF9800; color:#FF9800;">🔥 สถานะปัจจุบัน: [ ทบไม้ที่ 2 ]</div>', unsafe_allow_html=True)
+else:
+    st.markdown('<div class="step-badge" style="border-color:#FF3D00; color:#FF3D00;">⚠️ สถานะปัจจุบัน: [ ทบไม้ที่ 3 (สุดท้าย) ]</div>', unsafe_allow_html=True)
+
+# ---------------- 3. กล่องแสดงผลวิเคราะห์สัญญาณ ----------------
 res = analyze_engine(st.session_state.history)
 
 if res:
     action = res["action"]
     if action == "BANKER":
-        st.error(f"### 🔴 แทง BANKER ({res['conf_b']:.1f}%) 🔥")
+        st.error(f"### 🔴 แทง BANKER ({res['conf_b']:.1f}%)")
     elif action == "PLAYER":
-        st.info(f"### 🔵 แทง PLAYER ({res['conf_p']:.1f}%) 🔥")
+        st.info(f"### 🔵 แทง PLAYER ({res['conf_p']:.1f}%)")
     else:
         st.warning("### ⚪ ข้ามรอบนี้ (SKIP) - อัตราชนะไม่ถึง 63%")
         
@@ -213,19 +243,17 @@ else:
 
 st.divider()
 
-# ---------------- 3. สถิติ ถูก / ผิด ----------------
-wins, losses = evaluate_performance(st.session_state.history)
-total_bets = wins + losses
-accuracy = (wins / total_bets * 100) if total_bets > 0 else 0.0
-
-st.write("📊 **สถิติผลการทำนาย (Win / Loss):**")
-s1, s2, s3 = st.columns(3)
+# ---------------- 4. สถิติการเข้าไม้ ----------------
+st.write("📊 **สถิติการเข้าไม้ (Martingale Tracker):**")
+s1, s2, s3, s4 = st.columns(4)
 with s1:
-    st.metric("✅ ถูก (Win)", f"{wins} ตา")
+    st.metric("🎯 ไม้ 1", f"{w1}")
 with s2:
-    st.metric("❌ ผิด (Loss)", f"{losses} ตา")
+    st.metric("🔥 ไม้ 2", f"{w2}")
 with s3:
-    st.metric("🎯 ความแม่นยำ", f"{accuracy:.1f}%")
+    st.metric("⚠ ไม้ 3", f"{w3}")
+with s4:
+    st.metric("❌ แตก", f"{losses}")
 
 # เครดิตด้านล่าง
 st.markdown('<div class="footer-text">BAR Rich BAR AI Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
