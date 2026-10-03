@@ -8,6 +8,7 @@ st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
     
+    /* General Button Styling */
     div[data-testid="column"] button {
         height: 3.2em !important; font-size: 13px !important;
         font-weight: 800 !important; border-radius: 10px !important;
@@ -235,8 +236,8 @@ st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_h
 
 st.markdown("### ปรับแต่งเกณฑ์ความคม (Sniper Settings)")
 
-# ช่องปรับโหมดจำค่าถาวรด้วย key
-strategy = st.selectbox(
+# เปลี่ยนจาก selectbox เป็น st.radio ให้กดเลือกได้ทันที ไม่ต้องกดเลื่อนลงมา และจำค่าถาวรด้วย key
+strategy = st.radio(
     "เลือกโหมดการยิง:",
     ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
     key="strategy_mode"
@@ -323,12 +324,12 @@ st.divider()
 
 st.markdown("### บันทึกผลจริงตาต่อตา")
 
-# บังคับสีปุ่มบันทึกผลด้วย HTML/CSS แบบเจาะจงแต่ละปุ่ม
+# กำหนดสีปุ่มบันทึกผล 3 ปุ่มแรกให้ชัดเจน (PLAYER สีน้ำเงิน, BANKER สีแดง, TIE สีเขียว)
 st.markdown("""
 <style>
-    div.row-widget.stHorizontal > div:nth-child(1) button { background-color: #1E88E5 !important; }
-    div.row-widget.stHorizontal > div:nth-child(2) button { background-color: #E53935 !important; }
-    div.row-widget.stHorizontal > div:nth-child(3) button { background-color: #43A047 !important; }
+    div[data-testid="stHorizontalBlock"]:has(button:contains("PLAYER ชนะ")) > div:nth-child(1) button { background-color: #1E88E5 !important; }
+    div[data-testid="stHorizontalBlock"]:has(button:contains("BANKER ชนะ")) > div:nth-child(2) button { background-color: #E53935 !important; }
+    div[data-testid="stHorizontalBlock"]:has(button:contains("TIE เสมอ")) > div:nth-child(3) button { background-color: #43A047 !important; }
 </style>
 """, unsafe_allow_html=True)
 
