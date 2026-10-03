@@ -1,38 +1,34 @@
 import streamlit as st
 import numpy as np
 
-# ตั้งค่าหน้าจอ
 st.set_page_config(page_title="Baccarat AI Pro", layout="centered")
 
-# Custom CSS ตกแต่งปุ่มและ UI สำหรับมือถือโดยเฉพาะ
+# Custom CSS เพื่อความกระชับบนมือถือ
 st.markdown("""
 <style>
-    /* ปรับแต่งปุ่มกดบันทึก */
     div[data-testid="column"] button {
         height: 3.5em !important;
         font-size: 16px !important;
         font-weight: bold !important;
         border-radius: 10px !important;
-        padding: 0px !important;
     }
-    
-    /* กล่องแนะนำ AI */
-    .result-box {
-        padding: 15px;
-        border-radius: 12px;
+    .signal-card {
+        padding: 12px;
+        border-radius: 10px;
         text-align: center;
+        font-weight: bold;
         margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize Session State
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# --- CORE ALGORITHM ---
+# --- OPTIMIZED ALGORITHM ---
 def markov_chain_prob(history):
-    clean = [x for x in history if x in ['B', 'P']]
+    # ดึงเฉพาะ 30 ตาล่าสุดเพื่อลดภาระการคำนวณ ไม่ให้แอปค้าง
+    clean = [x for x in history if x in ['B', 'P']][-30:]
     if len(clean) < 3:
         return 0.5068, 0.4932
     
@@ -40,8 +36,7 @@ def markov_chain_prob(history):
     b_next, p_next = 0, 0
     
     for i in range(len(clean) - 2):
-        pair = "".join(clean[i:i+2])
-        if pair == last_two:
+        if "".join(clean[i:i+2]) == last_two:
             next_val = clean[i+2]
             if next_val == 'B': b_next += 1
             elif next_val == 'P': p_next += 1
@@ -53,7 +48,7 @@ def markov_chain_prob(history):
     return b_next / total, p_next / total
 
 def derived_roads_bias(history):
-    clean = [x for x in history if x in ['B', 'P']]
+    clean = [x for x in history if x in ['B', 'P']][-30:]
     if len(clean) < 6:
         return 0.5, 0.5
     
@@ -69,12 +64,10 @@ def derived_roads_bias(history):
     
     avg_streak = np.mean(streaks[-3:]) if len(streaks) >= 3 else 1
     
-    if avg_streak > 2.2: # Dragon
-        last = clean[-1]
-        return (0.65, 0.35) if last == 'B' else (0.35, 0.65)
-    elif avg_streak < 1.4: # Ping-Pong
-        last = clean[-1]
-        return (0.35, 0.65) if last == 'B' else (0.65, 0.35)
+    if avg_streak > 2.2:
+        return (0.65, 0.35) if clean[-1] == 'B' else (0.35, 0.65)
+    elif avg_streak < 1.4:
+        return (0.35, 0.65) if clean[-1] == 'B' else (0.65, 0.35)
         
     return 0.5, 0.5
 
@@ -108,11 +101,11 @@ def analyze_engine(history):
         "ev_p": ev_p
     }
 
-# ---------------- UI LAYOUT (TOP TO BOTTOM) ----------------
+# ---------------- UI MOBILE FIRST ----------------
 
-st.caption("🎲 Baccarat AI Real-Time Analytics")
+st.caption("🎲 Baccarat Real-Time AI")
 
-# 1. ANALYTICS DISPLAY (ขึ้นก่อนเลย อยู่บนสุด)
+# 1. กล่องวิเคราะห์ผล (แสดงบนสุดเสมอ)
 res = analyze_engine(st.session_state.history)
 
 if res:
@@ -124,18 +117,18 @@ if res:
     else:
         st.warning("### ⚪ ข้ามรอบนี้ (SKIP)")
         
-    # Stats Compact
     m1, m2 = st.columns(2)
     with m1:
         st.metric("🔴 Banker", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
     with m2:
         st.metric("🔵 Player", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
 else:
-    st.info(f"⏳ ใส่ข้อมูลอีก {max(0, 5 - len([x for x in st.session_state.history if x in ['B','P']]))} ตา เพื่อเริ่มคำนวณ")
+    clean_count = len([x for x in st.session_state.history if x in ['B','P']])
+    st.info(f"⏳ ใส่ข้อมูลเพิ่มอีก {max(0, 5 - clean_count)} ตา เพื่อเริ่มคำนวณ")
 
 st.divider()
 
-# 2. BUTTONS INPUT (ปุ่มกดแนวนอน 3 ปุ่ม เรียงข้างกัน)
+# 2. ปุ่มกดบันทึก 3 ปุ่มแบบเรียงข้างกัน
 st.write("**กดบันทึกผลตาถัดไป:**")
 c1, c2, c3 = st.columns(3)
 
@@ -154,12 +147,11 @@ with c3:
         st.session_state.history.append('T')
         st.rerun()
 
-# 3. HISTORY & CONTROL TOOLS (ด้านล่างสุด)
+# 3. ปุ่มควบคุมสถิติ
 st.write("---")
-# แสดงประวัติเค้าไพ่ล่าสุดแบบวงกลม/สี
 if st.session_state.history:
-    recent = " ".join(st.session_state.history[-10:])
-    st.write(f"**สถิติ ({len(st.session_state.history)} ตา):** {recent}")
+    recent = " ".join(st.session_state.history[-12:])
+    st.write(f"**สถิติรวม ({len(st.session_state.history)} ตา):** {recent}")
 
 t1, t2 = st.columns(2)
 with t1:
@@ -171,3 +163,4 @@ with t2:
     if st.button("🔄 ล้างขอน", use_container_width=True):
         st.session_state.history = []
         st.rerun()
+        
