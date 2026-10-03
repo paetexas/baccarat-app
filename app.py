@@ -1,9 +1,10 @@
 import streamlit as st
 import numpy as np
 
-st.set_page_config(page_title="Baccarat AI Pro", layout="centered")
+# ตั้งค่าชื่อหน้าเว็บเบราว์เซอร์
+st.set_page_config(page_title="BAR Rich BAR", layout="centered")
 
-# Custom CSS เพื่อความกระชับบนมือถือ
+# Custom CSS สำหรับตกแต่ง UI บนมือถือ
 st.markdown("""
 <style>
     div[data-testid="column"] button {
@@ -12,12 +13,36 @@ st.markdown("""
         font-weight: bold !important;
         border-radius: 10px !important;
     }
-    .signal-card {
-        padding: 12px;
-        border-radius: 10px;
+    .stMetric {
+        background-color: #1E222D;
+        padding: 8px;
+        border-radius: 8px;
+    }
+    .app-title {
         text-align: center;
-        font-weight: bold;
-        margin-bottom: 10px;
+        font-size: 28px;
+        font-weight: 800;
+        color: #FFD700;
+        margin-bottom: 0px;
+    }
+    .creator-title {
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: #00E676;
+        margin-bottom: 4px;
+    }
+    .sub-title {
+        text-align: center;
+        font-size: 13px;
+        color: #AAAAAA;
+        margin-bottom: 15px;
+    }
+    .footer-text {
+        text-align: center;
+        font-size: 12px;
+        color: #666666;
+        margin-top: 25px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -27,7 +52,6 @@ if "history" not in st.session_state:
 
 # --- OPTIMIZED ALGORITHM ---
 def markov_chain_prob(history):
-    # ดึงเฉพาะ 30 ตาล่าสุดเพื่อลดภาระการคำนวณ ไม่ให้แอปค้าง
     clean = [x for x in history if x in ['B', 'P']][-30:]
     if len(clean) < 3:
         return 0.5068, 0.4932
@@ -80,55 +104,62 @@ def analyze_engine(history):
     p_b_mk, p_p_mk = markov_chain_prob(clean)
     p_b_rd, p_p_rd = derived_roads_bias(clean)
     
-    composite_b = (p_b_base * 0.2) + (p_b_mk * 0.5) + (p_b_rd * 0.3)
-    composite_p = (p_p_base * 0.2) + (p_p_mk * 0.5) + (p_p_rd * 0.3)
+    composite_b = (p_b_base * 0.15) + (p_b_mk * 0.55) + (p_b_rd * 0.30)
+    composite_p = (p_p_base * 0.15) + (p_p_mk * 0.55) + (p_p_rd * 0.30)
+    
+    win_rate_b = composite_b * 100
+    win_rate_p = composite_p * 100
     
     ev_b = (composite_b * 0.95) - (composite_p * 1.0)
     ev_p = (composite_p * 1.00) - (composite_b * 1.0)
     
-    if ev_b > 0.02 and composite_b > composite_p:
+    # เงื่อนไข Win Rate >= 67% เท่านั้นถึงจะส่งสัญญาณ
+    if win_rate_b >= 67.0 and ev_b > 0.02:
         action = "BANKER"
-    elif ev_p > 0.02 and composite_p > composite_b:
+    elif win_rate_p >= 67.0 and ev_p > 0.02:
         action = "PLAYER"
     else:
         action = "SKIP"
         
     return {
         "action": action,
-        "conf_b": composite_b * 100,
-        "conf_p": composite_p * 100,
+        "conf_b": win_rate_b,
+        "conf_p": win_rate_p,
         "ev_b": ev_b,
         "ev_p": ev_p
     }
 
-# ---------------- UI MOBILE FIRST ----------------
+# ---------------- HEADER & DISPLAY ----------------
 
-st.caption("🎲 Baccarat Real-Time AI")
+# ชื่อโปรแกรม + ชื่อคนสร้าง
+st.markdown('<div class="app-title">🎰 BAR Rich BAR</div>', unsafe_allow_html=True)
+st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">(Signal Threshold: Win Rate 67%+)</div>', unsafe_allow_html=True)
 
-# 1. กล่องวิเคราะห์ผล (แสดงบนสุดเสมอ)
+# 1. กล่องแสดงผลคำนวณ (ด้านบนสุด)
 res = analyze_engine(st.session_state.history)
 
 if res:
     action = res["action"]
     if action == "BANKER":
-        st.error(f"### 🔴 แทง BANKER ({res['conf_b']:.1f}%)")
+        st.error(f"### 🔴 แทง BANKER ({res['conf_b']:.1f}%) 🔥")
     elif action == "PLAYER":
-        st.info(f"### 🔵 แทง PLAYER ({res['conf_p']:.1f}%)")
+        st.info(f"### 🔵 แทง PLAYER ({res['conf_p']:.1f}%) 🔥")
     else:
-        st.warning("### ⚪ ข้ามรอบนี้ (SKIP)")
+        st.warning("### ⚪ ข้ามรอบนี้ (SKIP) - อัตราชนะไม่ถึง 67%")
         
     m1, m2 = st.columns(2)
     with m1:
-        st.metric("🔴 Banker", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
+        st.metric("🔴 Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
     with m2:
-        st.metric("🔵 Player", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
+        st.metric("🔵 Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
 else:
     clean_count = len([x for x in st.session_state.history if x in ['B','P']])
     st.info(f"⏳ ใส่ข้อมูลเพิ่มอีก {max(0, 5 - clean_count)} ตา เพื่อเริ่มคำนวณ")
 
 st.divider()
 
-# 2. ปุ่มกดบันทึก 3 ปุ่มแบบเรียงข้างกัน
+# 2. ปุ่มกดบันทึก 3 ปุ่มขนานกัน
 st.write("**กดบันทึกผลตาถัดไป:**")
 c1, c2, c3 = st.columns(3)
 
@@ -163,4 +194,6 @@ with t2:
     if st.button("🔄 ล้างขอน", use_container_width=True):
         st.session_state.history = []
         st.rerun()
-        
+
+# เครดิตด้านล่าง
+st.markdown('<div class="footer-text">BAR Rich BAR AI Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
