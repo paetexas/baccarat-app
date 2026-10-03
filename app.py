@@ -5,15 +5,23 @@ import pandas as pd
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="BAR Rich BAR Pro Elite", layout="centered", initial_sidebar_state="collapsed")
 
-# Custom CSS ตกแต่ง UI Neon Dark Theme
+# Custom CSS ตกแต่ง UI Neon Dark Theme พร้อมใส่สีปุ่มให้เด่นชัด
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
+    
+    /* ปุ่มทั่วไป */
     div[data-testid="column"] button {
         height: 3.2em !important; font-size: 13px !important;
         font-weight: 800 !important; border-radius: 10px !important;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
     }
+
+    /* ปุ่ม PLAYER ชนะ (สีฟ้า/น้ำเงิน) */
+    div.row-widget.stButton:nth-of-type(1) button, 
+    button[key*="player"] { background-color: #1E88E5 !important; color: white !important; }
+
+    /* ตกแต่งสไตล์ Metric และอื่นๆ */
     .stMetric { background: linear-gradient(145deg, #161B22, #1E2430); padding: 10px; border-radius: 12px; border: 1px solid #2D3748; }
     .app-title { text-align: center; font-size: 26px; font-weight: 900; background: linear-gradient(90deg, #FFD700, #FF3D00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
@@ -64,8 +72,6 @@ if "shoe_count" not in st.session_state:
     st.session_state.shoe_count = 1
 if "card_counts" not in st.session_state:
     st.session_state.card_counts = {i: 0 for i in range(10)}
-if "temp_win_side" not in st.session_state:
-    st.session_state.temp_win_side = None
 if "total_cards" not in st.session_state:
     st.session_state.total_cards = 0
 
@@ -374,73 +380,49 @@ if st.button("รีเซ็ตสำรับไพ่ทั้งหมด", 
 
 st.divider()
 
-# ---------------- ROUND & SPREAD SELECTION ----------------
-st.markdown("### บันทึกผลจริงและแต้มที่ชนะ (Margin of Victory)")
+# ---------------- ROUND & SPREAD SELECTION (WITH COLORED BUTTONS) ----------------
+st.markdown("### บันทึกผลจริงตาต่อตา")
 
 sc1, sc2, sc3 = st.columns(3)
 with sc1:
-    if st.button("PLAYER ชนะ", use_container_width=True):
-        st.session_state.temp_win_side = 'P'
-with sc2:
-    if st.button("BANKER ชนะ", use_container_width=True):
-        st.session_state.temp_win_side = 'B'
-with sc3:
-    if st.button("TIE เสมอ", use_container_width=True):
-        st.session_state.history.append('T')
-        st.session_state.temp_win_side = None
+    # ปุ่ม Player ชนะ (สีน้ำเงิน)
+    if st.button("🔵 PLAYER ชนะ", use_container_width=True, type="primary"):
+        st.session_state.history.append('P')
+        st.session_state.spreads.append(2)
         st.rerun()
-
-if st.session_state.temp_win_side in ['P', 'B']:
-    side_name = "PLAYER" if st.session_state.temp_win_side == 'P' else "BANKER"
-    st.info(f"กำลังบันทึกฝั่ง **{side_name}** ชนะ กรุณาเลือกแต้มความห่างด้านล่าง (ระบบจะบันทึกทันที):")
-    
-    sp1, sp2, sp3, sp4, sp5 = st.columns(5)
-    with sp1:
-        if st.button("ป๊อก 8/9", use_container_width=True):
-            st.session_state.history.append(st.session_state.temp_win_side)
-            st.session_state.spreads.append(8)
-            st.session_state.temp_win_side = None
-            st.rerun()
-    with sp2:
-        if st.button("แต้มห่าง 4-5", use_container_width=True):
-            st.session_state.history.append(st.session_state.temp_win_side)
-            st.session_state.spreads.append(4)
-            st.session_state.temp_win_side = None
-            st.rerun()
-    with sp3:
-        if st.button("แต้มห่าง 2-3", use_container_width=True):
-            st.session_state.history.append(st.session_state.temp_win_side)
-            st.session_state.spreads.append(2)
-            st.session_state.temp_win_side = None
-            st.rerun()
-    with sp4:
-        if st.button("แต้มเฉือน 1", use_container_width=True):
-            st.session_state.history.append(st.session_state.temp_win_side)
-            st.session_state.spreads.append(1)
-            st.session_state.temp_win_side = None
-            st.rerun()
-    with sp5:
-        if st.button("ยกเลิก", use_container_width=True):
-            st.session_state.temp_win_side = None
-            st.rerun()
+with sc2:
+    # ปุ่ม Banker ชนะ (สีแดง - ใช้ Markdown ครอบช่วยเปลี่ยนสีปุ่มแดงเด่นชัด)
+    st.markdown("""
+    <style>
+    div.stButton > button:first-child { background-color: #D32F2F; color: white; }
+    </style>
+    """, unsafe_allow_html=True)
+    if st.button("🔴 BANKER ชนะ", use_container_width=True):
+        st.session_state.history.append('B')
+        st.session_state.spreads.append(2)
+        st.rerun()
+with sc3:
+    if st.button("🟡 TIE เสมอ", use_container_width=True):
+        st.session_state.history.append('T')
+        st.rerun()
 
 t1, t2, t3 = st.columns(3)
 with t1:
-    if st.button("ย้อนกลับ", use_container_width=True):
+    if st.button("↩️ ย้อนกลับ", use_container_width=True):
         if st.session_state.history: 
             st.session_state.history.pop()
             if st.session_state.spreads:
                 st.session_state.spreads.pop()
             st.rerun()
 with t2:
-    if st.button("ล้างขอนนี้", use_container_width=True):
+    if st.button("🗑️ ล้างขอนนี้", use_container_width=True):
         st.session_state.history = []
         st.session_state.spreads = []
         st.session_state.card_counts = {i: 0 for i in range(10)}
         st.session_state.total_cards = 0
         st.rerun()
 with t3:
-    if st.button("บันทึกขอน", use_container_width=True):
+    if st.button("💾 บันทึกขอน", use_container_width=True):
         if len(st.session_state.history) >= min_rounds:
             curr_step, w1_val, w2_val, w3_val, w4_val, losses_val, _ = evaluate_martingale_4steps(st.session_state.history, base_threshold, min_rounds)
             st.session_state.shoe_logs.append({
@@ -505,4 +487,35 @@ if res:
         st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
 else:
     clean_count = len([x for x in st.session_state.history if x in ['B','P']])
-        
+    st.info(f"กำลังสะสมข้อมูลซุ่มยิง: {clean_count}/{min_rounds} ตา")
+
+st.divider()
+
+st.write("**สถิติการเข้าไม้ขอนปัจจุบัน:**")
+s1, s2, s3, s4, s5 = st.columns(5)
+with s1:
+    st.metric("ไม้ 1", f"{w1}")
+with s2:
+    st.metric("ไม้ 2", f"{w2}")
+with s3:
+    st.metric("ไม้ 3", f"{w3}")
+with s4:
+    st.metric("ไม้ 4", f"{w4}")
+with s5:
+    st.metric("แตก", f"{losses}")
+
+st.markdown("### ประวัติย้อนหลังหลายขอน (Multi-Shoe History)")
+if st.session_state.shoe_logs:
+    df_shoes = pd.DataFrame(st.session_state.shoe_logs)
+    st.dataframe(df_shoes, use_container_width=True)
+    if st.button("ล้างประวัติขอนทั้งหมด"):
+        st.session_state.shoe_logs = []
+        st.session_state.shoe_count = 1
+        st.rerun()
+else:
+    st.write("ยังไม่มีประวัติขอนที่บันทึกไว้")
+
+st.markdown("### บันทึกประวัติการเข้าไม้ตาต่อตา (Current Shoe Logs)")
+if detailed_logs:
+    df_logs = pd.DataFrame(detailed_logs)
+    st.dataframe(df_logs, use_container_width=T     
