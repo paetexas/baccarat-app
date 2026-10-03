@@ -1,10 +1,10 @@
 import streamlit as st
 import numpy as np
 
-# ตั้งค่าชื่อหน้าเว็บเบราว์เซอร์
-st.set_page_config(page_title="BAR Rich BAR", layout="centered")
+# ตั้งค่าหน้าเว็บ
+st.set_page_config(page_title="BAR Rich BAR (4-Step Engine)", layout="centered")
 
-# Custom CSS สำหรับตกแต่ง UI บนมือถือ
+# Custom CSS สำหรับตกแต่ง UI
 st.markdown("""
 <style>
     div[data-testid="column"] button {
@@ -61,7 +61,7 @@ st.markdown("""
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# --- OPTIMIZED ALGORITHM ---
+# --- HIGH ACCURACY ALGORITHM ENGINE ---
 def markov_chain_prob(history):
     clean = [x for x in history if x in ['B', 'P']][-30:]
     if len(clean) < 3:
@@ -81,6 +81,31 @@ def markov_chain_prob(history):
         return 0.5068, 0.4932
     
     return b_next / total, p_next / total
+
+def pattern_recognition_bias(history):
+    clean = [x for x in history if x in ['B', 'P']][-20:]
+    if len(clean) < 4:
+        return 0.5, 0.5
+    
+    # 1. Check Ping-Pong (P-B-P-B)
+    if clean[-4:] == ['P', 'B', 'P', 'B']:
+        return 0.30, 0.70  # Expect P
+    if clean[-4:] == ['B', 'P', 'B', 'P']:
+        return 0.70, 0.30  # Expect B
+        
+    # 2. Check Dragon Streak (B-B-B-B or P-P-P-P)
+    if clean[-4:] == ['B', 'B', 'B', 'B']:
+        return 0.75, 0.25  # Follow Dragon B
+    if clean[-4:] == ['P', 'P', 'P', 'P']:
+        return 0.25, 0.75  # Follow Dragon P
+
+    # 3. Double Cut (B-B-P-P or P-P-B-B)
+    if clean[-3:] == ['B', 'B', 'P']:
+        return 0.30, 0.70  # Follow P
+    if clean[-3:] == ['P', 'P', 'B']:
+        return 0.70, 0.30  # Follow B
+        
+    return 0.5, 0.5
 
 def derived_roads_bias(history):
     clean = [x for x in history if x in ['B', 'P']][-30:]
@@ -113,10 +138,12 @@ def analyze_engine(history_slice):
     
     p_b_base, p_p_base = 0.5068, 0.4932
     p_b_mk, p_p_mk = markov_chain_prob(clean)
+    p_b_pat, p_p_pat = pattern_recognition_bias(clean)
     p_b_rd, p_p_rd = derived_roads_bias(clean)
     
-    composite_b = (p_b_base * 0.15) + (p_b_mk * 0.55) + (p_b_rd * 0.30)
-    composite_p = (p_p_base * 0.15) + (p_p_mk * 0.55) + (p_p_rd * 0.30)
+    # ถ่วงน้ำหนัก AI Multi-Engine
+    composite_b = (p_b_base * 0.10) + (p_b_mk * 0.40) + (p_b_pat * 0.30) + (p_b_rd * 0.20)
+    composite_p = (p_p_base * 0.10) + (p_p_mk * 0.40) + (p_p_pat * 0.30) + (p_p_rd * 0.20)
     
     win_rate_b = composite_b * 100
     win_rate_p = composite_p * 100
@@ -124,9 +151,9 @@ def analyze_engine(history_slice):
     ev_b = (composite_b * 0.95) - (composite_p * 1.0)
     ev_p = (composite_p * 1.00) - (composite_b * 1.0)
     
-    if win_rate_b >= 63.0 and ev_b > 0.01:
+    if win_rate_b >= 62.0 and ev_b > 0.00:
         action = "BANKER"
-    elif win_rate_p >= 63.0 and ev_p > 0.01:
+    elif win_rate_p >= 62.0 and ev_p > 0.00:
         action = "PLAYER"
     else:
         action = "SKIP"
@@ -139,10 +166,10 @@ def analyze_engine(history_slice):
         "ev_p": ev_p
     }
 
-# --- MARTINGALE STEP & WIN/LOSS EVALUATOR ---
-def evaluate_martingale(history):
+# --- 4-STEP MARTINGALE EVALUATOR ---
+def evaluate_martingale_4steps(history):
     curr_step = 1  # เริ่มต้นไม้ 1
-    w1, w2, w3, losses = 0, 0, 0, 0
+    w1, w2, w3, w4, losses = 0, 0, 0, 0, 0
     
     for i in range(10, len(history)):
         actual_result = history[i]
@@ -157,24 +184,24 @@ def evaluate_martingale(history):
             if is_win:
                 if curr_step == 1: w1 += 1
                 elif curr_step == 2: w2 += 1
-                elif curr_step >= 3: w3 += 1
+                elif curr_step == 3: w3 += 1
+                elif curr_step >= 4: w4 += 1
                 curr_step = 1  # ชนะ -> รีเซ็ตกลับไม้ 1
             else:
-                if curr_step >= 3:
+                if curr_step >= 4:
                     losses += 1
-                    curr_step = 1  # หลุด 3 ไม้ -> รีเซ็ตกลับไม้ 1
+                    curr_step = 1  # หลุด 4 ไม้ -> แตก / รีเซ็ตกลับไม้ 1
                 else:
                     curr_step += 1  # ผิด -> ทบไม้ถัดไป
                     
-    return curr_step, w1, w2, w3, losses
+    return curr_step, w1, w2, w3, w4, losses
 
 # ---------------- HEADER ----------------
-
-st.markdown('<div class="app-title">🎰 BAR Rich BAR</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-title">🎰 BAR Rich BAR (4-Step AI)</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">(Signal Threshold: Win Rate 63%+ | Min Rounds: 10)</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">(4-Step Martingale System | Min Rounds: 10)</div>', unsafe_allow_html=True)
 
-# ---------------- 1. ปุ่มกดคีย์สถิติ (อยู่ด้านบนสุด) ----------------
+# ---------------- 1. ปุ่มคีย์สถิติ ----------------
 c1, c2, c3 = st.columns(3)
 with c1:
     if st.button("🔴 BANKER", use_container_width=True):
@@ -191,7 +218,7 @@ with c3:
         st.session_state.history.append('T')
         st.rerun()
 
-# ปุ่มควบคุมสถิติ
+# ปุ่มควบคุม
 t1, t2 = st.columns(2)
 with t1:
     if st.button("↩️ ย้อนกลับ", use_container_width=True):
@@ -209,18 +236,20 @@ if st.session_state.history:
 
 st.divider()
 
-# คำนวณสถานะทบไม้
-curr_step, w1, w2, w3, losses = evaluate_martingale(st.session_state.history)
+# คำนวณสถานะทบ 4 ไม้
+curr_step, w1, w2, w3, w4, losses = evaluate_martingale_4steps(st.session_state.history)
 
-# ---------------- 2. แสดงป้ายสถานะไม้ตลอดเวลา ----------------
+# ---------------- 2. แสดงป้ายสถานะทบไม้ 4 สเต็ป ----------------
 if curr_step == 1:
     st.markdown('<div class="step-badge">💰 สถานะปัจจุบัน: [ ไม้ที่ 1 ]</div>', unsafe_allow_html=True)
 elif curr_step == 2:
-    st.markdown('<div class="step-badge" style="border-color:#FF9800; color:#FF9800;">🔥 สถานะปัจจุบัน: [ ทบไม้ที่ 2 ]</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-badge" style="border-color:#FFB300; color:#FFB300;">🔥 สถานะปัจจุบัน: [ ทบไม้ที่ 2 ]</div>', unsafe_allow_html=True)
+elif curr_step == 3:
+    st.markdown('<div class="step-badge" style="border-color:#FF9800; color:#FF9800;">⚡ สถานะปัจจุบัน: [ ทบไม้ที่ 3 ]</div>', unsafe_allow_html=True)
 else:
-    st.markdown('<div class="step-badge" style="border-color:#FF3D00; color:#FF3D00;">⚠️ สถานะปัจจุบัน: [ ทบไม้ที่ 3 (สุดท้าย) ]</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-badge" style="border-color:#FF3D00; color:#FF3D00;">⚠️ สถานะปัจจุบัน: [ ทบไม้ที่ 4 (สุดท้าย) ]</div>', unsafe_allow_html=True)
 
-# ---------------- 3. กล่องแสดงผลวิเคราะห์สัญญาณ ----------------
+# ---------------- 3. กล่องวิเคราะห์ผล ----------------
 res = analyze_engine(st.session_state.history)
 
 if res:
@@ -230,7 +259,7 @@ if res:
     elif action == "PLAYER":
         st.info(f"### 🔵 แทง PLAYER ({res['conf_p']:.1f}%)")
     else:
-        st.warning("### ⚪ ข้ามรอบนี้ (SKIP) - อัตราชนะไม่ถึง 63%")
+        st.warning("### ⚪ ข้ามรอบนี้ (SKIP) - อัตราชนะไม่ถึงเกณฑ์")
         
     m1, m2 = st.columns(2)
     with m1:
@@ -243,17 +272,19 @@ else:
 
 st.divider()
 
-# ---------------- 4. สถิติการเข้าไม้ ----------------
-st.write("📊 **สถิติการเข้าไม้ (Martingale Tracker):**")
-s1, s2, s3, s4 = st.columns(4)
+# ---------------- 4. ตารางสถิติเข้าไม้ 4 ไม้ + แตก ----------------
+st.write("📊 **สถิติการเข้าไม้ (4-Step Tracker):**")
+s1, s2, s3, s4, s5 = st.columns(5)
 with s1:
     st.metric("🎯 ไม้ 1", f"{w1}")
 with s2:
     st.metric("🔥 ไม้ 2", f"{w2}")
 with s3:
-    st.metric("⚠ ไม้ 3", f"{w3}")
+    st.metric("⚡ ไม้ 3", f"{w3}")
 with s4:
+    st.metric("🚀 ไม้ 4", f"{w4}")
+with s5:
     st.metric("❌ แตก", f"{losses}")
 
-# เครดิตด้านล่าง
+# เครดิต
 st.markdown('<div class="footer-text">BAR Rich BAR AI Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
