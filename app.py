@@ -496,6 +496,10 @@ if res:
     highest_conf = max(res['conf_b'], res['conf_p'])
     if action != "SKIP":
         if highest_conf >= 70.0 or res["is_fusion_match"]:
-            st.markdown(f'<div class="kelly-card">**คำแนะนำการวางเดิมพัน:** ความมั่นใจสูงมาก **(แนะนำอัดหนัก 1.5x - 2.0x)**</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="kelly-card">**คำแนะนำการวางเดิมพัน:** ความมั่นใจสูงมาก <b>(แนะนำอัดหนัก 1.5x - 2.0x)</b></div>',
+                unsafe_allow_html=True
+            )
         else:
-            st.markdown(f'<div class="kelly-card">**คำแนะนำการวางเดิมพัน:** เดินเงินปกติ **(1.0x มาตรฐาน)**</div>', unsafe_allow_html=Tr
+            st.markdown(
+                '<div class="kelly-card">**คำแนะนำการวางเดิมพัน
