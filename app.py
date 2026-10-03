@@ -168,7 +168,7 @@ def analyze_engine(history_slice):
 
 # --- 4-STEP MARTINGALE EVALUATOR ---
 def evaluate_martingale_4steps(history):
-    curr_step = 1  # เริ่มต้นไม้ 1
+    curr_step = 1
     w1, w2, w3, w4, losses = 0, 0, 0, 0, 0
     
     for i in range(10, len(history)):
@@ -186,13 +186,13 @@ def evaluate_martingale_4steps(history):
                 elif curr_step == 2: w2 += 1
                 elif curr_step == 3: w3 += 1
                 elif curr_step >= 4: w4 += 1
-                curr_step = 1  # ชนะ -> รีเซ็ตกลับไม้ 1
+                curr_step = 1
             else:
                 if curr_step >= 4:
                     losses += 1
-                    curr_step = 1  # หลุด 4 ไม้ -> แตก / รีเซ็ตกลับไม้ 1
+                    curr_step = 1
                 else:
-                    curr_step += 1  # ผิด -> ทบไม้ถัดไป
+                    curr_step += 1
                     
     return curr_step, w1, w2, w3, w4, losses
 
@@ -201,16 +201,16 @@ st.markdown('<div class="app-title">🎰 BAR Rich BAR (4-Step AI)</div>', unsafe
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">(4-Step Martingale System | Min Rounds: 10)</div>', unsafe_allow_html=True)
 
-# ---------------- 1. ปุ่มคีย์สถิติ ----------------
+# ---------------- 1. ปุ่มคีย์สถิติ (เรียง P ขึ้นก่อน B) ----------------
 c1, c2, c3 = st.columns(3)
 with c1:
-    if st.button("🔴 BANKER", use_container_width=True):
-        st.session_state.history.append('B')
+    if st.button("🔵 PLAYER", use_container_width=True):
+        st.session_state.history.append('P')
         st.rerun()
 
 with c2:
-    if st.button("🔵 PLAYER", use_container_width=True):
-        st.session_state.history.append('P')
+    if st.button("🔴 BANKER", use_container_width=True):
+        st.session_state.history.append('B')
         st.rerun()
 
 with c3:
@@ -263,9 +263,9 @@ if res:
         
     m1, m2 = st.columns(2)
     with m1:
-        st.metric("🔴 Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
-    with m2:
         st.metric("🔵 Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
+    with m2:
+        st.metric("🔴 Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
 else:
     clean_count = len([x for x in st.session_state.history if x in ['B','P']])
     st.info(f"⏳ กรุณาใส่ข้อมูลให้ครบอย่างน้อย 10 ตาก่อนเริ่มวิเคราะห์ (สะสมแล้ว: {clean_count}/10)")
