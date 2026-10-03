@@ -17,6 +17,16 @@ st.markdown("""
     .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
     .step-badge { background: linear-gradient(135deg, #1A1F2C, #252D3D); border: 2px solid #FF3D00; border-radius: 14px; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; color: #FF3D00; margin-bottom: 15px; }
     .kelly-card { background: #1E222D; border-left: 5px solid #FFD700; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; }
+    .pinned-guide {
+        background: linear-gradient(145deg, #161B22, #1A1F2C);
+        border: 2px solid #FFD700;
+        border-radius: 14px;
+        padding: 18px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        box-shadow: 0px 4px 15px rgba(255, 215, 0, 0.15);
+    }
+    .pinned-guide h4 { color: #FFD700; margin-top: 0; margin-bottom: 10px; font-weight: 900; }
     .warning-banner {
         background: rgba(255, 61, 0, 0.12); border: 1px solid #FFD700; color: #FF8A65;
         text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px;
@@ -126,10 +136,8 @@ def markov_chain_prob(history):
     b_next, p_next = 0, 0
     for i in range(len(clean) - 2):
         if "".join(clean[i:i+2]) == last_two:
-            if clean[i+2] == 'B':
-                b_next += 1
-            elif clean[i+2] == 'P':
-                p_next += 1
+            if clean[i+2] == 'B': b_next += 1
+            elif clean[i+2] == 'P': p_next += 1
     total = b_next + p_next
     if total == 0:
         return 0.5068, 0.4932
@@ -172,10 +180,8 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
         composite_p = (p_p_base * 0.05) + (p_p_mk * 0.45) + (p_p_dr * 0.40) + p_bias_card
         
     if is_fusion_match:
-        if composite_b > composite_p:
-            composite_b += 0.08
-        else:
-            composite_p += 0.08
+        if composite_b > composite_p: composite_b += 0.08
+        else: composite_p += 0.08
     
     win_rate_b = max(0, min(100, composite_b * 100))
     win_rate_p = max(0, min(100, composite_p * 100))
@@ -416,6 +422,18 @@ st.markdown("### ประวัติการเข้าไม้ตาต่
 if detailed_logs:
     st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
 
+# ---------------- PINNED GUIDE AT THE BOTTOM ----------------
+st.markdown("""
+<div class="pinned-guide">
+    <h4>คู่มือการใช้งานระบบ [BAR Rich BAR Pro Elite]</h4>
+    <ol style="margin: 0; padding-left: 20px; line-height: 1.6; font-size: 14px;">
+        <li><b>บันทึกผลจริง:</b> กดปุ่ม <b>PLAYER ชนะ</b> หรือ <b>BANKER ชนะ</b> ทันทีเมื่อทราบผล ระบบจะบันทึกและประมวลผลให้อัตโนมัติ</li>
+        <li><b>นับไพ่เสริมความแม่นยำ:</b> สามารถจิ้มเลือกหน้าไพ่ที่เปิดบนโต๊ะด้านบนเพื่อช่วยคำนวณความน่าจะเป็นเพิ่มเติมได้</li>
+        <li><b>ลุยตามสัญญาณ AI:</b> รอสัญญาณฟันธงและทำตามสถานะการเดินเงินที่ระบบแนะนำเพื่อทำกำไร</li>
+    </ol>
+</div>
+""", unsafe_allow_html=True)
+
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-    
+        
