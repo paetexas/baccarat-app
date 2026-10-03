@@ -9,40 +9,40 @@ st.markdown("""
 <style>
     div[data-testid="column"] button {
         height: 3.5em !important;
-        font-size: 16px !important;
+        font-size: 15px !important;
         font-weight: bold !important;
         border-radius: 10px !important;
     }
     .stMetric {
         background-color: #1E222D;
-        padding: 8px;
+        padding: 6px;
         border-radius: 8px;
     }
     .app-title {
         text-align: center;
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 800;
         color: #FFD700;
         margin-bottom: 0px;
     }
     .creator-title {
         text-align: center;
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
         color: #00E676;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
     }
     .sub-title {
         text-align: center;
-        font-size: 13px;
+        font-size: 12px;
         color: #AAAAAA;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
     }
     .footer-text {
         text-align: center;
-        font-size: 12px;
+        font-size: 11px;
         color: #666666;
-        margin-top: 25px;
+        margin-top: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -113,7 +113,6 @@ def analyze_engine(history_slice):
     ev_b = (composite_b * 0.95) - (composite_p * 1.0)
     ev_p = (composite_p * 1.00) - (composite_b * 1.0)
     
-    # เงื่อนไข Win Rate >= 70% เท่านั้นถึงจะส่งสัญญาณ
     if win_rate_b >= 70.0 and ev_b > 0.02:
         action = "BANKER"
     elif win_rate_p >= 70.0 and ev_p > 0.02:
@@ -129,16 +128,14 @@ def analyze_engine(history_slice):
         "ev_p": ev_p
     }
 
-# --- CALCULATE WIN / LOSS TRACKER ---
+# --- WIN / LOSS TRACKER ---
 def evaluate_performance(history):
     wins, losses = 0, 0
-    # คำนวณสัญญาณย้อนหลังตั้งแต่ตาที่ 16 เป็นต้นไป
     for i in range(15, len(history)):
         actual_result = history[i]
         if actual_result not in ['B', 'P']:
-            continue  # ถ้าผลออก Tie จะข้าม ไม่นับแพ้/ชนะ
+            continue
         
-        # ดึงสัญญาณที่แอปเคยคำนวณไว้ก่อนหน้านั้น
         past_signal = analyze_engine(history[:i])
         if past_signal and past_signal["action"] in ["BANKER", "PLAYER"]:
             pred = past_signal["action"]
@@ -149,13 +146,48 @@ def evaluate_performance(history):
                 
     return wins, losses
 
-# ---------------- HEADER & DISPLAY ----------------
+# ---------------- HEADER ----------------
 
 st.markdown('<div class="app-title">🎰 BAR Rich BAR</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">(Signal Threshold: Win Rate 70%+ | Min Rounds: 15)</div>', unsafe_allow_html=True)
 
-# 1. กล่องแสดงผลวิเคราะห์สัญญาณปัจจุบัน
+# ---------------- 1. ปุ่มกดคีย์สถิติ (ย้ายมาไว้บนสุด) ----------------
+c1, c2, c3 = st.columns(3)
+with c1:
+    if st.button("🔴 BANKER", use_container_width=True):
+        st.session_state.history.append('B')
+        st.rerun()
+
+with c2:
+    if st.button("🔵 PLAYER", use_container_width=True):
+        st.session_state.history.append('P')
+        st.rerun()
+
+with c3:
+    if st.button("🟢 TIE", use_container_width=True):
+        st.session_state.history.append('T')
+        st.rerun()
+
+# ปุ่มควบคุมสถิติ ย้อนกลับ / ล้างขอน
+t1, t2 = st.columns(2)
+with t1:
+    if st.button("↩️ ย้อนกลับ", use_container_width=True):
+        if st.session_state.history:
+            st.session_state.history.pop()
+            st.rerun()
+with t2:
+    if st.button("🔄 ล้างขอน", use_container_width=True):
+        st.session_state.history = []
+        st.rerun()
+
+if st.session_state.history:
+    recent = " ".join(st.session_state.history[-12:])
+    st.caption(f"**สถิติรวม ({len(st.session_state.history)} ตา):** {recent}")
+
+st.divider()
+
+# ---------------- 2. กล่องแสดงผลวิเคราะห์สัญญาณ ----------------
 res = analyze_engine(st.session_state.history)
 
 if res:
@@ -176,12 +208,13 @@ else:
     clean_count = len([x for x in st.session_state.history if x in ['B','P']])
     st.info(f"⏳ กรุณาใส่ข้อมูลให้ครบอย่างน้อย 15 ตาก่อนเริ่มวิเคราะห์ (สะสมแล้ว: {clean_count}/15)")
 
-# 2. แผงแสดงสถิติ ถูก / ผิด
+st.divider()
+
+# ---------------- 3. สถิติ ถูก / ผิด ----------------
 wins, losses = evaluate_performance(st.session_state.history)
 total_bets = wins + losses
 accuracy = (wins / total_bets * 100) if total_bets > 0 else 0.0
 
-st.markdown("---")
 st.write("📊 **สถิติผลการทำนาย (Win / Loss):**")
 s1, s2, s3 = st.columns(3)
 with s1:
@@ -190,44 +223,6 @@ with s2:
     st.metric("❌ ผิด (Loss)", f"{losses} ตา")
 with s3:
     st.metric("🎯 ความแม่นยำ", f"{accuracy:.1f}%")
-
-st.divider()
-
-# 3. ปุ่มกดบันทึก 3 ปุ่มขนานกัน
-st.write("**กดบันทึกผลตาถัดไป:**")
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    if st.button("🔴 BANKER", use_container_width=True):
-        st.session_state.history.append('B')
-        st.rerun()
-
-with c2:
-    if st.button("🔵 PLAYER", use_container_width=True):
-        st.session_state.history.append('P')
-        st.rerun()
-
-with c3:
-    if st.button("🟢 TIE", use_container_width=True):
-        st.session_state.history.append('T')
-        st.rerun()
-
-# 4. ปุ่มควบคุมสถิติ
-st.write("---")
-if st.session_state.history:
-    recent = " ".join(st.session_state.history[-12:])
-    st.write(f"**สถิติรวม ({len(st.session_state.history)} ตา):** {recent}")
-
-t1, t2 = st.columns(2)
-with t1:
-    if st.button("↩️ ย้อนกลับ", use_container_width=True):
-        if st.session_state.history:
-            st.session_state.history.pop()
-            st.rerun()
-with t2:
-    if st.button("🔄 ล้างขอน", use_container_width=True):
-        st.session_state.history = []
-        st.rerun()
 
 # เครดิตด้านล่าง
 st.markdown('<div class="footer-text">BAR Rich BAR AI Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
