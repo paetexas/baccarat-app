@@ -49,7 +49,6 @@ def calculate_choppiness(clean_history):
     for i in range(1, len(clean_history[-10:])):
         if clean_history[-10:][i] != clean_history[-10:][i-1]:
             switches += 1
-    # ค่าระหว่าง 0.0 (นิ่ง/มังกรยาว) ถึง 1.0 (สลับสับหลอกถี่มาก)
     return switches / 9.0
 
 # --- 3. PATTERN TEMPLATE MATCHING (จับเค้าไพ่ครู) ---
@@ -58,15 +57,10 @@ def match_special_patterns(clean_history):
     last4 = clean_history[-4:]
     last5 = clean_history[-5:] if len(clean_history) >= 5 else []
     
-    # เค้าปิงปองยาว (P-B-P-B-P หรือ B-P-B-P-B)
     if last5 == ['P', 'B', 'P', 'B', 'P']: return "🏓 ปิงปองยาว", 0.20, 0.80
     if last5 == ['B', 'P', 'B', 'P', 'B']: return "🏓 ปิงปองยาว", 0.80, 0.20
-    
-    # เค้ามังกรติดลม (B-B-B-B หรือ P-P-P-P)
     if last4 == ['B', 'B', 'B', 'B']: return "🐉 มังกรแดง", 0.82, 0.18
     if last4 == ['P', 'P', 'P', 'P']: return "🐉 มังกรน้ำเงิน", 0.18, 0.82
-    
-    # เค้าสองตัด (B-B-P-P / P-P-B-B)
     if last4 == ['B', 'B', 'P', 'P']: return "✂️ สองตัด", 0.75, 0.25
     if last4 == ['P', 'P', 'B', 'B']: return "✂️ สองตัด", 0.25, 0.75
     
@@ -123,17 +117,14 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
     clean = [x for x in history_slice if x in ['B', 'P']]
     if len(clean) < min_rounds: return None
     
-    # คำนวณความแกว่งของขอน (Choppiness Index)
     chop_index = calculate_choppiness(clean)
-    dynamic_threshold = base_threshold + (chop_index * 5.0) # ถ้าไพ่แกว่งมาก ยกระดับเกณฑ์ขึ้นอีกออโต้
+    dynamic_threshold = base_threshold + (chop_index * 5.0)
     
-    # ดึงค่าจากเครื่องยนต์ต่างๆ
     p_b_base, p_p_base = 0.5068, 0.4932
     p_b_mk, p_p_mk = markov_chain_prob(clean)
     p_b_dr, p_p_dr = derived_roads_engine(clean)
     pat_name, p_b_pat, p_p_pat = match_special_patterns(clean)
     
-    # รวมค่าน้ำหนัก
     if pat_name:
         composite_b = (p_b_base * 0.05) + (p_b_mk * 0.35) + (p_b_dr * 0.35) + (p_b_pat * 0.25)
         composite_p = (p_p_base * 0.05) + (p_p_mk * 0.35) + (p_p_dr * 0.35) + (p_p_pat * 0.25)
@@ -230,7 +221,7 @@ with c3:
 
 t1, t2, t3 = st.columns(3)
 with t1:
-    if st.button("↩️ ย้อนกลับ", use_container_width=True):
+    if st.button("↩️️ ย้อนกลับ", use_container_width=True):
         if st.session_state.history: st.session_state.history.pop(); st.rerun()
 with t2:
     if st.button("🔄 ล้างขอนนี้", use_container_width=True):
@@ -268,7 +259,6 @@ if res:
     action = res["action"]
     chop_val = res["chop_index"]
     
-    # เตือนความแกว่ง
     if chop_val > 0.6:
         st.caption(f"⚠️ **ขอนนี้ไพ่สลับแกว่งสูง ({chop_val*100:.0f}%)** -> ยกระดับเกณฑ์ขึ้นเป็น {res['dynamic_threshold']:.1f}% เพื่อความปลอดภัย")
     
@@ -282,7 +272,6 @@ if res:
     else:
         st.warning(f"### ⚪ ข้ามรอบนี้ (SKIP) - ความน่าจะเป็นยังไม่ถึงเกณฑ์ที่ปลอดภัย")
         
-    # KELLY MONEY MANAGEMENT (คำนวณการเดินเงิน)
     highest_conf = max(res['conf_b'], res['conf_p'])
     if action != "SKIP":
         if highest_conf >= 72.0:
@@ -295,7 +284,7 @@ if res:
     with m2: st.metric("🔴 Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
 else:
     clean_count = len([x for x in st.session_state.history if x in ['B','P']])
-    st.info(f"⏳ กรุณาใส่ข้อมูลอย่างน้อย {min_rounds} ตาก่อนเริ่มวิเคราะห์ (สะสมแล้ว: {clean_count}/{min_rounds})")
+    st.info(f"⏳ สะสมข้อมูล: {clean_count}/{min_rounds} ตา (เริ่มวิเคราะห์เมื่อครบ {min_rounds} ตา)")
 
 st.divider()
 
@@ -322,30 +311,4 @@ with st.expander("📝 บันทึกประวัติการเข้
     else: st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
 
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-่อนเริ่มวิเคราะห์ (สะสมแล้ว: {clean_count}/{min_rounds})")
-
-st.divider()
-
-st.write("📊 **สถิติการเข้าไม้ขอนปัจจุบัน:**")
-s1, s2, s3, s4, s5 = st.columns(5)
-with s1: st.metric("🎯 ไม้ 1", f"{w1}")
-with s2: st.metric("🔥 ไม้ 2", f"{w2}")
-with s3: st.metric("⚡ ไม้ 3", f"{w3}")
-with s4: st.metric("🚀 ไม้ 4", f"{w4}")
-with s5: st.metric("❌ แตก", f"{losses}")
-
-with st.expander("📜 ประวัติย้อนหลังหลายขอน (Multi-Shoe History)"):
-    if st.session_state.shoe_logs:
-        df_shoes = pd.DataFrame(st.session_state.shoe_logs)
-        st.dataframe(df_shoes, use_container_width=True)
-        if st.button("🗑️ ล้างประวัติขอนทั้งหมด"):
-            st.session_state.shoe_logs = []; st.session_state.shoe_count = 1; st.rerun()
-    else: st.write("ยังไม่มีประวัติขอนที่บันทึกไว้")
-
-with st.expander("📝 บันทึกประวัติการเข้าไม้ตาต่อตา (Current Shoe Logs)"):
-    if detailed_logs:
-        df_logs = pd.DataFrame(detailed_logs)
-        st.dataframe(df_logs, use_container_width=True)
-    else: st.write("ยังไม่มีบันทึกการเข้าไม้ในขอนนี้")
-
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Engine • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+        
