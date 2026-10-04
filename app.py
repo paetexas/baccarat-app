@@ -93,48 +93,77 @@ def evaluate_martingale(history, target_threshold, min_rounds):
             
     return curr_step, w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], losses, detailed_logs
 
+# ส่วนหัวแอปพลิเคชัน
 st.markdown('<div class="app-title">BAR Rich BAR Pro Elite</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
 
+# ส่วนเลือกโหมด
 strategy = st.radio("เลือกโหมดการยิง:", ["โหมดมาตรฐาน (เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (เกณฑ์ 52%+)"], key="strat")
 base_threshold, min_rounds = (52.0, 6) if "ซูปเปอร์บู๊" in strategy else (57.0, 8)
 
 st.divider()
+
+# ส่วนปุ่มบันทึกผลจริง
 st.markdown("### บันทึกผลจริง")
 sc1, sc2, sc3 = st.columns(3)
 with sc1:
-    if st.button("PLAYER", use_container_width=True): st.session_state.history.append('P'); st.rerun()
+    if st.button("PLAYER", use_container_width=True, key="btn_p"): 
+        st.session_state.history.append('P')
+        st.rerun()
 with sc2:
-    if st.button("BANKER", use_container_width=True): st.session_state.history.append('B'); st.rerun()
+    if st.button("BANKER", use_container_width=True, key="btn_b"): 
+        st.session_state.history.append('B')
+        st.rerun()
 with sc3:
-    if st.button("TIE", use_container_width=True): st.session_state.history.append('T'); st.rerun()
+    if st.button("TIE", use_container_width=True, key="btn_t"): 
+        st.session_state.history.append('T')
+        st.rerun()
 
+# ส่วนปุ่มควบคุมย่อย
 t1, t2, t3 = st.columns(3)
 with t1:
-    if st.button("ย้อนกลับ", use_container_width=True) and st.session_state.history: st.session_state.history.pop(); st.rerun()
+    if st.button("ย้อนกลับ", use_container_width=True, key="btn_back"): 
+        if st.session_state.history: 
+            st.session_state.history.pop()
+            st.rerun()
 with t2:
-    if st.button("ล้างขอน", use_container_width=True): st.session_state.history = []; st.rerun()
+    if st.button("ล้างขอน", use_container_width=True, key="btn_clear"): 
+        st.session_state.history = []
+        st.rerun()
 with t3:
-    if st.button("บันทึกขอน", use_container_width=True) and len(st.session_state.history) >= min_rounds:
-        _, w1, w2, w3, w4, w5, w6, w7, w8, losses_val, _ = evaluate_martingale(st.session_state.history, base_threshold, min_rounds)
-        st.session_state.shoe_logs.append({"ขอนที่": f"ขอน #{st.session_state.shoe_count}", "จำนวนตา": len(st.session_state.history), "ไม้ 1": w1, "ไม้ 2": w2, "ไม้ 3": w3, "ไม้ 4": w4, "ไม้ 5": w5, "ไม้ 6": w6, "ไม้ 7": w7, "ไม้ 8": w8, "แตก": losses_val})
-        st.session_state.shoe_count += 1; st.session_state.history = []; st.rerun()
+    if st.button("บันทึกขอน", use_container_width=True, key="btn_save_shoe"): 
+        if len(st.session_state.history) >= min_rounds:
+            _, w1, w2, w3, w4, w5, w6, w7, w8, losses_val, _ = evaluate_martingale(st.session_state.history, base_threshold, min_rounds)
+            st.session_state.shoe_logs.append({
+                "ขอนที่": f"ขอน #{st.session_state.shoe_count}", 
+                "จำนวนตา": len(st.session_state.history), 
+                "ไม้ 1": w1, "ไม้ 2": w2, "ไม้ 3": w3, "ไม้ 4": w4, 
+                "ไม้ 5": w5, "ไม้ 6": w6, "ไม้ 7": w7, "ไม้ 8": w8, "แตก": losses_val
+            })
+            st.session_state.shoe_count += 1
+            st.session_state.history = []
+            st.rerun()
 
 if st.session_state.history:
     st.caption(f"**สถิติ ({len(st.session_state.history)} ตา):** {' '.join(st.session_state.history[-12:])}")
 
 st.divider()
 
+# การประมวลผลและการแสดงผลวิเคราะห์
 curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs = evaluate_martingale(st.session_state.history, base_threshold, min_rounds)
 st.markdown(f'<div class="step-badge">สถานะเดินเงิน (8 ไม้): [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
 
 res = analyze_engine(st.session_state.history, base_threshold, min_rounds)
 if res:
-    if res["pat_name"]: st.success(f"ตรวจพบเค้าไพ่พิเศษ: **{res['pat_name']}**")
+    if res["pat_name"]: 
+        st.success(f"ตรวจพบเค้าไพ่พิเศษ: **{res['pat_name']}**")
     
-    if res["action"] == "BANKER": st.error(f"### ฟันธง: BANKER ({res['conf_b']:.1f}%)")
-    elif res["action"] == "PLAYER": st.info(f"### ฟันธง: PLAYER ({res['conf_p']:.1f}%)")
-    else: st.warning("### หลบเลี่ยง (SKIP) - ตลาดผันผวน")
+    if res["action"] == "BANKER": 
+        st.error(f"### ฟันธง: BANKER ({res['conf_b']:.1f}%)")
+    elif res["action"] == "PLAYER": 
+        st.info(f"### ฟันธง: PLAYER ({res['conf_p']:.1f}%)")
+    else: 
+        st.warning("### หลบเลี่ยง (SKIP) - ตลาดผันผวน")
     
     m1, m2 = st.columns(2)
     with m1: st.metric("Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
@@ -161,7 +190,7 @@ if detailed_logs:
     st.markdown("### ประวัติการเข้าไม้ตาต่อตา")
     st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
 
-# ส่วนวิธีเล่นและคำเตือนที่เพิ่มกลับมา
+# คู่มือและคำเตือน
 st.markdown("---")
 st.markdown("### 📖 คู่มือและวิธีใช้งาน")
 st.markdown("- **บันทึกผล:** กดปุ่ม PLAYER, BANKER หรือ TIE ตามผลจริงบนโต๊ะเพื่อเก็บสถิติ")
@@ -170,4 +199,3 @@ st.markdown("- **ระบบเดินเงิน:** ติดตามส�
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัยและศึกษาวิชาการทางสถิติ ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Edition • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-    
