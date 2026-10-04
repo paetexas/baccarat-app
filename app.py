@@ -68,16 +68,14 @@ def calculate_choppiness(clean_history):
             switches += 1
     return switches / 9.0
 
-# 1. Volatility Index & Gambler's Fallacy Check
 def calculate_volatility_and_fallacy(clean_history):
     if len(clean_history) < 6:
         return 0.5, "ปกติ"
     recent = clean_history[-10:]
     b_count = recent.count('B')
     p_count = recent.count('P')
-    variance = abs(b_count - p_count) / len(recent) # ยิ่งน้อยยิ่งแกว่ง (Volatility สูง)
+    variance = abs(b_count - p_count) / len(recent)
     
-    # ตรวจสอบ Gambler's Fallacy (เช่น ออก B ติดกัน 5 ตา แล้วคนมักคิดว่าตาหน้าต้อง P)
     streak_side = recent[-1]
     streak_len = 0
     for x in reversed(recent):
@@ -90,7 +88,6 @@ def calculate_volatility_and_fallacy(clean_history):
         
     return variance, fallacy_warning
 
-# 2. Hypothesis Testing: Z-Score & P-Value Analysis
 def hypothesis_testing_z_score(clean_history):
     if len(clean_history) < 10:
         return 0.0, 0.5, "ข้อมูลน้อยเกินไปสำหรับการทดสอบสมมติฐาน"
@@ -98,16 +95,14 @@ def hypothesis_testing_z_score(clean_history):
     n = len(clean_history)
     b_wins = clean_history.count('B')
     p_hat = b_wins / n
-    p_null = 0.5068 # ความน่าจะเป็นมาตรฐานของ Banker
+    p_null = 0.5068
     
-    # คำนวณค่า Z-Score
     std_error = np.sqrt((p_null * (1 - p_null)) / n)
     if std_error == 0:
         z_score = 0.0
     else:
         z_score = (p_hat - p_null) / std_error
         
-    # ประมาณการ P-value อย่างง่ายจาก Z-score
     p_value = 2 * (1 - 0.5 * (1 + np.erf(abs(z_score) / np.sqrt(2))))
     
     status_msg = ""
@@ -118,7 +113,6 @@ def hypothesis_testing_z_score(clean_history):
         
     return z_score, p_value, status_msg
 
-# 3. Monte Carlo Simulation (จำลองอนาคตขอนไพ่ 1,000 รูปแบบ)
 def run_monte_carlo_simulation(clean_history, next_pred):
     if len(clean_history) < 5 or not next_pred:
         return 50.0, 0.0
@@ -129,7 +123,6 @@ def run_monte_carlo_simulation(clean_history, next_pred):
     b_prob_base = recent_trend.count('B') / len(recent_trend)
     
     for _ in range(simulations):
-        # สุ่มจำลองผลลัพธ์ 20 ตาถัดไป
         sim_result = random.choices(['B', 'P'], weights=[max(0.2, min(0.8, b_prob_base + random.uniform(-0.15, 0.15))), 
                                                        max(0.2, min(0.8, 1 - b_prob_base + random.uniform(-0.15, 0.15)))])[0]
         if sim_result == next_pred:
@@ -457,7 +450,6 @@ if res:
     if res["is_fusion_match"]:
         st.markdown('<div class="academic-card">**MATRIX FUSION ALERT:** เค้าไพ่หลักและตารางลูกสอดคล้องตรงกัน 100%!</div>', unsafe_allow_html=True)
 
-    # Monte Carlo Simulation
     pred_side = "BANKER" if res["action"] == "BANKER" else ("PLAYER" if res["action"] == "PLAYER" else None)
     if pred_side:
         mc_win, mc_dd = run_monte_carlo_simulation(clean_history_eval, pred_side)
@@ -472,4 +464,17 @@ if res:
 
     m1, m2 = st.columns(2)
     with m1:
-        st.metric("Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:
+        st.metric("Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
+    with m2:
+        st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
+else:
+    st.info(f"กำลังสะสมข้อมูลเค้าไพ่: {len(clean_history_eval)}/{min_rounds} ตา")
+
+st.divider()
+
+st.write("**สถิติการเข้าไม้ขอนปัจจุบัน (8 ไม้):**")
+col_a1, col_a2, col_a3, col_a4 = st.columns(4)
+with col_a1: st.metric("ไม้ 1", f"{w1}")
+with col_a2: st.metric("ไม้ 2", f"{w2}")
+with col_a3: st.metric("ไม้ 3", f"{w3}")
+with col_a4: st.metri
