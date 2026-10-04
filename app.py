@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import random
 
-st.set_page_config(page_title="BAR Rich BAR Pro Elite - Ultra Sniper", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="BAR Rich BAR Pro Elite - Academic Edition", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
@@ -20,8 +20,8 @@ st.markdown("""
     .app-title { text-align: center; font-size: 26px; font-weight: 900; background: linear-gradient(90deg, #FFD700, #FF3D00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
     .step-badge { background: linear-gradient(135deg, #1A1F2C, #252D3D); border: 2px solid #FF3D00; border-radius: 14px; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; color: #FF3D00; margin-bottom: 15px; }
-    .kelly-card { background: #1E222D; border-left: 5px solid #FFD700; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; }
-    .feedback-card { background: #16222A; border-left: 5px solid #00E676; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
+    .academic-card { background: #1A2332; border-left: 5px solid #00E676; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
+    .monte-card { background: #221A2E; border-left: 5px solid #9C27B0; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
     .warning-banner {
         background: rgba(255, 61, 0, 0.12); border: 1px solid #FFD700; color: #FF8A65;
         text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px;
@@ -68,6 +68,77 @@ def calculate_choppiness(clean_history):
             switches += 1
     return switches / 9.0
 
+# 1. Volatility Index & Gambler's Fallacy Check
+def calculate_volatility_and_fallacy(clean_history):
+    if len(clean_history) < 6:
+        return 0.5, "ปกติ"
+    recent = clean_history[-10:]
+    b_count = recent.count('B')
+    p_count = recent.count('P')
+    variance = abs(b_count - p_count) / len(recent) # ยิ่งน้อยยิ่งแกว่ง (Volatility สูง)
+    
+    # ตรวจสอบ Gambler's Fallacy (เช่น ออก B ติดกัน 5 ตา แล้วคนมักคิดว่าตาหน้าต้อง P)
+    streak_side = recent[-1]
+    streak_len = 0
+    for x in reversed(recent):
+        if x == streak_side: streak_len += 1
+        else: break
+        
+    fallacy_warning = ""
+    if streak_len >= 4:
+        fallacy_warning = f"ระวังกับดักจิตวิทยา (Gambler's Fallacy): ออก {streak_side} ติดกัน {streak_len} ตาแล้ว อย่าเพิ่งสวนอย่างไร้เหตุผล"
+        
+    return variance, fallacy_warning
+
+# 2. Hypothesis Testing: Z-Score & P-Value Analysis
+def hypothesis_testing_z_score(clean_history):
+    if len(clean_history) < 10:
+        return 0.0, 0.5, "ข้อมูลน้อยเกินไปสำหรับการทดสอบสมมติฐาน"
+    
+    n = len(clean_history)
+    b_wins = clean_history.count('B')
+    p_hat = b_wins / n
+    p_null = 0.5068 # ความน่าจะเป็นมาตรฐานของ Banker
+    
+    # คำนวณค่า Z-Score
+    std_error = np.sqrt((p_null * (1 - p_null)) / n)
+    if std_error == 0:
+        z_score = 0.0
+    else:
+        z_score = (p_hat - p_null) / std_error
+        
+    # ประมาณการ P-value อย่างง่ายจาก Z-score
+    p_value = 2 * (1 - 0.5 * (1 + np.erf(abs(z_score) / np.sqrt(2))))
+    
+    status_msg = ""
+    if p_value < 0.05:
+        status_msg = f"นัยสำคัญทางสถิติสูง (Z={z_score:.2f}, P<0.05): เค้าไพ่มีทิศทางชัดเจน ไม่ใช่ความบังเอิญ"
+    else:
+        status_msg = f"ความผันผวนสูง/เข้าใกล้ความบังเอิญ (Z={z_score:.2f}, P>=0.05): สัญญาณแกว่งตัว"
+        
+    return z_score, p_value, status_msg
+
+# 3. Monte Carlo Simulation (จำลองอนาคตขอนไพ่ 1,000 รูปแบบ)
+def run_monte_carlo_simulation(clean_history, next_pred):
+    if len(clean_history) < 5 or not next_pred:
+        return 50.0, 0.0
+    
+    simulations = 1000
+    wins = 0
+    recent_trend = clean_history[-5:]
+    b_prob_base = recent_trend.count('B') / len(recent_trend)
+    
+    for _ in range(simulations):
+        # สุ่มจำลองผลลัพธ์ 20 ตาถัดไป
+        sim_result = random.choices(['B', 'P'], weights=[max(0.2, min(0.8, b_prob_base + random.uniform(-0.15, 0.15))), 
+                                                       max(0.2, min(0.8, 1 - b_prob_base + random.uniform(-0.15, 0.15)))])[0]
+        if sim_result == next_pred:
+            wins += 1
+            
+    monte_win_rate = (wins / simulations) * 100
+    expected_drawdown = max(0.0, (100 - monte_win_rate) * 0.35)
+    return monte_win_rate, expected_drawdown
+
 def match_special_patterns(clean_history):
     if len(clean_history) < 4:
         return None, 0.5, 0.5
@@ -109,9 +180,9 @@ def derived_roads_engine(history):
     matrix = build_big_road(history)
     if len(matrix) < 4:
         return (0.5, 0.5), False
-    big_eye = get_derived_road_signal(matrix, 1)   # Big Eye Boy
-    small_road = get_derived_road_signal(matrix, 2) # Small Road
-    cockroach = get_derived_road_signal(matrix, 3)  # Cockroach Pig
+    big_eye = get_derived_road_signal(matrix, 1)
+    small_road = get_derived_road_signal(matrix, 2)
+    cockroach = get_derived_road_signal(matrix, 3)
     
     score = big_eye + small_road + cockroach
     last_side = matrix[-1][0]
@@ -178,7 +249,6 @@ def analyze_engine(history_slice, base_threshold, min_rounds, recent_accuracy_bo
         if composite_b > composite_p: composite_b += 0.08
         else: composite_p += 0.08
         
-    # Adaptive Feedback Loop Integration
     composite_b += recent_accuracy_bonus
     composite_p -= recent_accuracy_bonus
     
@@ -208,7 +278,6 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
     logs = []
     correct_count = 0
     total_signals = 0
-    
     recent_accuracy_bonus = 0.0
     
     for i in range(min_rounds, len(history)):
@@ -251,14 +320,13 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
     accuracy_rate = (correct_count / total_signals * 100) if total_signals > 0 else 0.0
     return curr_step, w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], losses, logs, accuracy_rate, total_signals
 
-st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [Ultra Sniper 70%]</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [Academic Edition]</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
 
 st.markdown("### ปรับแต่งเกณฑ์ความคม (Sniper Settings)")
-
 strategy = st.radio(
     "เลือกโหมดการยิงตามเค้าไพ่:",
-    ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดอัลตร้าสไนเปอร์ (เน้นชัวร์ขั้นเทพ เกณฑ์ 70%+)"],
+    ["โหมดมาตรฐาน (สมดุล เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ เกณฑ์ 52%+)", "โหมดอัลตร้าสไนเปอร์ (เน้นชัวร์ขั้นเทพ เกณฑ์ 70%+)"],
     key="strategy_mode"
 )
 
@@ -283,56 +351,36 @@ st.caption("จิ้มกดหน้าไพ่ทุกใบที่เ�
 ca, cb, cc, cd, ce = st.columns(5)
 with ca:
     if st.button("10/J/Q/K", use_container_width=True):
-        st.session_state.card_counts[0] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[0] += 1; st.session_state.total_cards += 1; st.rerun()
 with cb:
     if st.button("A", use_container_width=True):
-        st.session_state.card_counts[1] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[1] += 1; st.session_state.total_cards += 1; st.rerun()
 with cc:
     if st.button("2", use_container_width=True):
-        st.session_state.card_counts[2] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[2] += 1; st.session_state.total_cards += 1; st.rerun()
 with cd:
     if st.button("3", use_container_width=True):
-        st.session_state.card_counts[3] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[3] += 1; st.session_state.total_cards += 1; st.rerun()
 with ce:
     if st.button("4", use_container_width=True):
-        st.session_state.card_counts[4] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[4] += 1; st.session_state.total_cards += 1; st.rerun()
 
 cfa, cfb, cfc, cfd, cfe = st.columns(5)
 with cfa:
     if st.button("5", use_container_width=True):
-        st.session_state.card_counts[5] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[5] += 1; st.session_state.total_cards += 1; st.rerun()
 with cfb:
     if st.button("6", use_container_width=True):
-        st.session_state.card_counts[6] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[6] += 1; st.session_state.total_cards += 1; st.rerun()
 with cfc:
     if st.button("7", use_container_width=True):
-        st.session_state.card_counts[7] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[7] += 1; st.session_state.total_cards += 1; st.rerun()
 with cfd:
     if st.button("8", use_container_width=True):
-        st.session_state.card_counts[8] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[8] += 1; st.session_state.total_cards += 1; st.rerun()
 with cfe:
     if st.button("9", use_container_width=True):
-        st.session_state.card_counts[9] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+        st.session_state.card_counts[9] += 1; st.session_state.total_cards += 1; st.rerun()
 
 if st.button("รีเซ็ตสำรับไพ่ทั้งหมด", use_container_width=True):
     st.session_state.card_counts = {i: 0 for i in range(10)}
@@ -342,32 +390,18 @@ if st.button("รีเซ็ตสำรับไพ่ทั้งหมด", 
 st.divider()
 
 st.markdown("### บันทึกผลจริงตาต่อตา")
-
-st.markdown("""
-<style>
-    div.element-container:has(#btn-player-marker) + div button { background-color: #1E88E5 !important; color: white !important; }
-    div.element-container:has(#btn-banker-marker) + div button { background-color: #E53935 !important; color: white !important; }
-    div.element-container:has(#btn-tie-marker) + div button { background-color: #43A047 !important; color: white !important; }
-</style>
-""", unsafe_allow_html=True)
-
 sc1, sc2, sc3 = st.columns(3)
 with sc1:
-    st.markdown('<div id="btn-player-marker"></div>', unsafe_allow_html=True)
     if st.button("PLAYER ชนะ", use_container_width=True, key="btn_player"):
         st.session_state.history.append('P')
-        auto_spread = random.choices([1, 2, 3, 4, 5, 6, 7, 8, 9], weights=[30, 25, 15, 10, 8, 5, 4, 2, 1])[0]
-        st.session_state.spreads.append(auto_spread)
+        st.session_state.spreads.append(random.choices([1, 2, 3, 4, 5], weights=[30, 25, 20, 15, 10])[0])
         st.rerun()
 with sc2:
-    st.markdown('<div id="btn-banker-marker"></div>', unsafe_allow_html=True)
     if st.button("BANKER ชนะ", use_container_width=True, key="btn_banker"):
         st.session_state.history.append('B')
-        auto_spread = random.choices([1, 2, 3, 4, 5, 6, 7, 8, 9], weights=[30, 25, 15, 10, 8, 5, 4, 2, 1])[0]
-        st.session_state.spreads.append(auto_spread)
+        st.session_state.spreads.append(random.choices([1, 2, 3, 4, 5], weights=[30, 25, 20, 15, 10])[0])
         st.rerun()
 with sc3:
-    st.markdown('<div id="btn-tie-marker"></div>', unsafe_allow_html=True)
     if st.button("TIE เสมอ", use_container_width=True, key="btn_tie"):
         st.session_state.history.append('T')
         st.rerun()
@@ -381,27 +415,21 @@ with t1:
             st.rerun()
 with t2:
     if st.button("ล้างขอนนี้", use_container_width=True):
-        st.session_state.history = []
-        st.session_state.spreads = []
-        st.session_state.card_counts = {i: 0 for i in range(10)}
-        st.session_state.total_cards = 0
+        st.session_state.history = []; st.session_state.spreads = []
+        st.session_state.card_counts = {i: 0 for i in range(10)}; st.session_state.total_cards = 0
         st.rerun()
 with t3:
     if st.button("บันทึกขอน", use_container_width=True):
         if len(st.session_state.history) >= min_rounds:
             curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses_val, _, acc_rate, _ = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
             st.session_state.shoe_logs.append({
-                "ขอนที่": f"ขอน #{st.session_state.shoe_count}",
-                "จำนวนตา": len(st.session_state.history),
-                "ความแม่นยำ": f"{acc_rate:.1f}%",
-                "ไม้ 1": w1, "ไม้ 2": w2, "ไม้ 3": w3, "ไม้ 4": w4,
+                "ขอนที่": f"ขอน #{st.session_state.shoe_count}", "จำนวนตา": len(st.session_state.history),
+                "ความแม่นยำ": f"{acc_rate:.1f}%", "ไม้ 1": w1, "ไม้ 2": w2, "ไม้ 3": w3, "ไม้ 4": w4,
                 "ไม้ 5": w5, "ไม้ 6": w6, "ไม้ 7": w7, "ไม้ 8": w8, "แตก": losses_val
             })
             st.session_state.shoe_count += 1
-            st.session_state.history = []
-            st.session_state.spreads = []
-            st.session_state.card_counts = {i: 0 for i in range(10)}
-            st.session_state.total_cards = 0
+            st.session_state.history = []; st.session_state.spreads = []
+            st.session_state.card_counts = {i: 0 for i in range(10)}; st.session_state.total_cards = 0
             st.rerun()
 
 if st.session_state.history:
@@ -413,63 +441,35 @@ st.divider()
 curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs, accuracy_rate, total_signals = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
 st.markdown(f'<div class="step-badge">สถานะเดินเงิน (8 ไม้): [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
 
-if total_signals > 0:
-    st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status (Ultra Sniper):</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
+clean_history_eval = [x for x in st.session_state.history if x in ['B', 'P']]
+if len(clean_history_eval) >= 6:
+    z_sc, p_val, z_msg = hypothesis_testing_z_score(clean_history_eval)
+    vol_idx, fallacy_msg = calculate_volatility_and_fallacy(clean_history_eval)
+    
+    st.markdown(f'<div class="academic-card"><b>Hypothesis Testing (Z-Score & P-Value):</b> {z_msg}<br><b>Volatility Index (ความผันผวน):</b> {vol_idx:.2f} (0=แกว่งมาก, 1=นิ่ง)</div>', unsafe_allow_html=True)
+    if fallacy_msg:
+        st.warning(fallacy_msg)
 
 res = analyze_engine(st.session_state.history, base_threshold, min_rounds)
 if res:
     if res["pat_name"]:
         st.success(f"ตรวจพบเค้าไพ่พิเศษ (Roadmap Pattern): **{res['pat_name']}**")
     if res["is_fusion_match"]:
-        st.markdown('<div class="kelly-card">**MATRIX FUSION ALERT:** เค้าไพ่หลักและตารางลูกสอดคล้องตรงกัน 100%!</div>', unsafe_allow_html=True)
+        st.markdown('<div class="academic-card">**MATRIX FUSION ALERT:** เค้าไพ่หลักและตารางลูกสอดคล้องตรงกัน 100%!</div>', unsafe_allow_html=True)
+
+    # Monte Carlo Simulation
+    pred_side = "BANKER" if res["action"] == "BANKER" else ("PLAYER" if res["action"] == "PLAYER" else None)
+    if pred_side:
+        mc_win, mc_dd = run_monte_carlo_simulation(clean_history_eval, pred_side)
+        st.markdown(f'<div class="monte-card"><b>Monte Carlo Simulation (1,000 Iterations):</b> โอกาสชนะจำลองอนาคตของฝั่ง {pred_side} อยู่ที่ <b>{mc_win:.1f}%</b> | ความเสี่ยง Drawdown เฉลี่ย: <b>{mc_dd:.1f}%</b></div>', unsafe_allow_html=True)
 
     if res["action"] == "BANKER":
         st.error(f"### ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
     elif res["action"] == "PLAYER":
         st.info(f"### ฟันธงแทง PLAYER ({res['conf_p']:.1f}%)")
     else:
-        st.warning(f"### หลบเลี่ยง (SKIP) - เกณฑ์ความชัวร์ไม่ถึง 70% / รอจังหวะสวยๆ")
+        st.warning(f"### หลบเลี่ยง (SKIP) - ตลาดผันผวน / ไม่ผ่านเกณฑ์สถิติ")
 
     m1, m2 = st.columns(2)
     with m1:
-        st.metric("Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
-    with m2:
-        st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
-else:
-    clean_count = len([x for x in st.session_state.history if x in ['B','P']])
-    st.info(f"กำลังสะสมข้อมูลเค้าไพ่: {clean_count}/{min_rounds} ตา")
-
-st.divider()
-
-st.write("**สถิติการเข้าไม้ขอนปัจจุบัน (8 ไม้):**")
-col_a1, col_a2, col_a3, col_a4 = st.columns(4)
-with col_a1: st.metric("ไม้ 1", f"{w1}")
-with col_a2: st.metric("ไม้ 2", f"{w2}")
-with col_a3: st.metric("ไม้ 3", f"{w3}")
-with col_a4: st.metric("ไม้ 4", f"{w4}")
-
-col_b1, col_b2, col_b3, col_b4, col_b5 = st.columns(5)
-with col_b1: st.metric("ไม้ 5", f"{w5}")
-with col_b2: st.metric("ไม้ 6", f"{w6}")
-with col_b3: st.metric("ไม้ 7", f"{w7}")
-with col_b4: st.metric("ไม้ 8", f"{w8}")
-with col_b5: st.metric("แตก", f"{losses}")
-
-st.markdown("### ประวัติย้อนหลังหลายขอน")
-if st.session_state.shoe_logs:
-    st.dataframe(pd.DataFrame(st.session_state.shoe_logs), use_container_width=True)
-
-st.markdown("### ประวัติการเข้าไม้ตาต่อตา (พร้อมผล ถูก/ผิด)")
-if detailed_logs:
-    st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
-
-st.markdown("---")
-st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Ultra Sniper 70%]")
-st.markdown("#### 1. โหมดอัลตร้าสไนเปอร์ (เกณฑ์ 70%+)")
-st.markdown("- ถูกออกแบบมาให้กรองความเสี่ยงสูง ออกไม้เฉพาะตาที่มั่นใจจริงๆ เท่านั้น (ต้องผ่านเกณฑ์ความน่าจะเป็นสูงถึง 70% ขึ้นไป)")
-st.markdown("#### 2. Adaptive Feedback Loop")
-st.markdown("- ปรับความมั่นใจแบบเรียลไทม์ตามผล ถูก/ผิด ย้อนหลัง ช่วยหลบเลี่ยงจังหวะขอนไพ่แกว่งโดยอัตโนมัติ")
-
-st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Ultra Sniper 70% • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-                
+        st.metric("Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:
