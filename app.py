@@ -21,6 +21,7 @@ st.markdown("""
     .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
     .step-badge { background: linear-gradient(135deg, #1A1F2C, #252D3D); border: 2px solid #FF3D00; border-radius: 14px; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; color: #FF3D00; margin-bottom: 15px; }
     .kelly-card { background: #1E222D; border-left: 5px solid #FFD700; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; }
+    .feedback-card { background: #16222A; border-left: 5px solid #00E676; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
     .warning-banner {
         background: rgba(255, 61, 0, 0.12); border: 1px solid #FFD700; color: #FF8A65;
         text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px;
@@ -152,7 +153,8 @@ def get_hilo_card_bias():
     card_concentration_bias = (true_count * 0.012) + spread_boost
     return max(-0.09, min(0.09, -card_concentration_bias)), max(-0.09, min(0.09, card_concentration_bias)), true_count, running_count
 
-def analyze_engine(history_slice, base_threshold, min_rounds):
+# ฟังก์ชันประเมินผลพร้อมระบบ Feedback ปรับน้ำหนักตามความแม่นยำย้อนหลัง (Adaptive Feedback Loop)
+def analyze_engine(history_slice, base_threshold, min_rounds, recent_accuracy_bonus=0.0):
     clean = [x for x in history_slice if x in ['B', 'P']]
     if len(clean) < min_rounds:
         return None
@@ -176,6 +178,10 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
     if is_fusion_match:
         if composite_b > composite_p: composite_b += 0.08
         else: composite_p += 0.08
+        
+    # นำผลลัพธ์ความถูกต้องย้อนหลังมาปรับจูน (Feedback Loop Injection)
+    composite_b += recent_accuracy_bonus
+    composite_p -= recent_accuracy_bonus
     
     win_rate_b = max(0, min(100, composite_b * 100))
     win_rate_p = max(0, min(100, composite_p * 100))
@@ -196,29 +202,31 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
         "is_fusion_match": is_fusion_match, "true_count": true_count
     }
 
-# ขยายระบบเดินเงินเป็น 8 ไม้
 def evaluate_martingale_8steps(history, target_threshold, min_rounds):
     curr_step = 1
-    w = [0] * 9  # Index 1 ถึง 8 สำหรับเก็บสถิติไม้ 1-8
+    w = [0] * 9  
     losses = 0
     logs = []
+    correct_count = 0
+    total_signals = 0
+    
+    # คำนวณแบบย้อนหลังเพื่อหาความแม่นยำระยะสั้นมาป้อนกลับ (Feedback Loop)
+    recent_accuracy_bonus = 0.0
     
     for i in range(min_rounds, len(history)):
         actual_result = history[i]
         if actual_result not in ['B', 'P']:
             continue
         
-        past_signal = analyze_engine(history[:i], target_threshold, min_rounds)
+        # ประเมินโดยใช้ค่าโบนัสสะสมจากรอบก่อนหน้า
+        past_signal = analyze_engine(history[:i], target_threshold, min_rounds, recent_accuracy_bonus)
         if past_signal and past_signal["action"] in ["BANKER", "PLAYER"]:
             pred = past_signal["action"]
             is_win = (pred == "BANKER" and actual_result == 'B') or (pred == "PLAYER" and actual_result == 'P')
             
-            logs.append({
-                "ตาที่": i + 1, "ทาย": pred, "ผล": actual_result,
-                "ไม้": f"ไม้ {curr_step}", "สถานะ": "ชนะ" if is_win else "ผิด"
-            })
-            
+            total_signals += 1
             if is_win:
+                correct_count += 1
                 if 1 <= curr_step <= 8:
                     w[curr_step] += 1
                 curr_step = 1
@@ -228,8 +236,24 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
                     curr_step = 1
                 else:
                     curr_step += 1
+            
+            # คำนวณอัตราความถูกต้อง 5ตาล่าสุด เพื่อปรับ Feedback Loop ทันที
+            if total_signals >= 3:
+                recent_acc = correct_count / total_signals
+                if recent_acc >= 0.65:
+                    recent_accuracy_bonus = 0.04  # ถ้าช่วงนี้แม่น ดันความมั่นใจสูตรเพิ่ม
+                elif recent_acc <= 0.35:
+                    recent_accuracy_bonus = -0.04 # ถ้าช่วงนี้แกว่ง/ผิดบ่อย ถอนความมั่นใจให้ระวังตัวขึ้น (SKIP ถี่ขึ้น)
+                else:
+                    recent_accuracy_bonus = 0.0
+
+            logs.append({
+                "ตาที่": i + 1, "ทาย": pred, "ผล": actual_result,
+                "ไม้": f"ไม้ {curr_step}", "สถานะ": "ถูก (WIN)" if is_win else "ผิด (LOSS)"
+            })
                     
-    return curr_step, w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], losses, logs
+    accuracy_rate = (correct_count / total_signals * 100) if total_signals > 0 else 0.0
+    return curr_step, w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], losses, logs, accuracy_rate, total_signals
 
 st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [SNIPER V2]</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
@@ -369,10 +393,11 @@ with t2:
 with t3:
     if st.button("บันทึกขอน", use_container_width=True):
         if len(st.session_state.history) >= min_rounds:
-            curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses_val, _ = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
+            curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses_val, _, acc_rate, _ = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
             st.session_state.shoe_logs.append({
                 "ขอนที่": f"ขอน #{st.session_state.shoe_count}",
                 "จำนวนตา": len(st.session_state.history),
+                "ความแม่นยำ": f"{acc_rate:.1f}%",
                 "ไม้ 1": w1, "ไม้ 2": w2, "ไม้ 3": w3, "ไม้ 4": w4,
                 "ไม้ 5": w5, "ไม้ 6": w6, "ไม้ 7": w7, "ไม้ 8": w8, "แตก": losses_val
             })
@@ -389,8 +414,12 @@ if st.session_state.history:
 
 st.divider()
 
-curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
+curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs, accuracy_rate, total_signals = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
 st.markdown(f'<div class="step-badge">สถานะเดินเงิน (8 ไม้): [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
+
+# แสดงผล Feedback สะท้อนสถานะความแม่นยำเรียลไทม์
+if total_signals > 0:
+    st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status:</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
 
 res = analyze_engine(st.session_state.history, base_threshold, min_rounds)
 if res:
@@ -418,7 +447,6 @@ else:
 st.divider()
 
 st.write("**สถิติการเข้าไม้ขอนปัจจุบัน (8 ไม้):**")
-# แบ่งแสดงผลเป็น 2 แถวเพื่อให้หน้าจอไม่แน่นเกินไปบนมือถือ
 col_a1, col_a2, col_a3, col_a4 = st.columns(4)
 with col_a1: st.metric("ไม้ 1", f"{w1}")
 with col_a2: st.metric("ไม้ 2", f"{w2}")
@@ -436,25 +464,21 @@ st.markdown("### ประวัติย้อนหลังหลายขอ
 if st.session_state.shoe_logs:
     st.dataframe(pd.DataFrame(st.session_state.shoe_logs), use_container_width=True)
 
-st.markdown("### ประวัติการเข้าไม้ตาต่อตา")
+st.markdown("### ประวัติการเข้าไม้ตาต่อตา (พร้อมผล ถูก/ผิด)")
 if detailed_logs:
     st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
 
 st.markdown("---")
 st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Sniper V2]")
 
-st.markdown("#### 1. การเลือกโหมดการยิง (Sniper Settings)")
-st.markdown("- **โหมดมาตรฐาน (เกณฑ์ 57%+):** เหมาะสำหรับการเล่นปกติ ให้ความสมดุลระหว่างความถี่ในการออกไม้และความแม่นยำ")
-st.markdown("- **โหมดซุปเปอร์บู๊ (เกณฑ์ 52%+):** เหมาะสำหรับคนชอบออกไม้ยับๆ ทำรอบไว ออกสัญญาณถี่ขึ้น")
-st.markdown("- **โหมดสไนเปอร์ (เกณฑ์ 62%+):** เน้นความชัวร์ระดับพรีเมียม กรองความเสี่ยงสูง ออกไม้ายากแต่แม่นยำสูงมาก")
+st.markdown("#### 1. ระบบ Adaptive Feedback Loop (วิเคราะห์ผลถูก-ผิด)")
+st.markdown("- ระบบจะคอยเช็กผลการทำนายย้อนหลังตาต่อตาโดยอัตโนมัติ และแสดงค่า **ความแม่นยำ (Accuracy Rate)** เรียลไทม์")
+st.markdown("- หากช่วงไหนสูตรเข้าเป้าต่อเนื่อง ระบบจะเพิ่มความมั่นใจให้ออกไม้ง่ายขึ้น แต่ถ้าช่วงไหนขอนไพ่เริ่มแกว่งและทายผิด ระบบจะปรับลดความมั่นใจลงอัตโนมัติ (บังคับหลบเลี่ยงหรือ SKIP เพื่อเซฟทุน)")
 
-st.markdown("#### 2. ระบบนับไพ่ Hi-Lo & Point Spread")
-st.markdown("- เมื่อเปิดไพ่บนโต๊ะ ให้จิ้มเลือกหน้าไพ่ที่ออก ระบบจะคำนวณค่า True Count แบบเรียลไทม์")
-st.markdown("- **ระบบแต้มห่าง (Point Spread)** จะทำงานคำนวณให้อัตโนมัติเบื้องหลังทันทีทุกครั้งที่คุณกดผลแพ้ชนะ โดยไม่ต้องกดเลือกเอง")
-
-st.markdown("#### 3. การบันทึกผล & การใช้งานระบบเดินเงิน (8 ไม้)")
-st.markdown("- กดปุ่ม **PLAYER ชนะ** หรือ **BANKER ชนะ** ตามผลจริงบนโต๊ะได้ทันที")
-st.markdown("- ดูสถานะเดินเงินขยายขีดความสามารถ **[ ไม้ที่ 1 ถึง ไม้ที่ 8 ]** เพื่อคุมทุนตามระบบพับทบยาวๆ รองรับเค้าไพ่ลากยาวได้อย่างแม่นยำ")
+st.markdown("#### 2. การเลือกโหมดการยิง (Sniper Settings)")
+st.markdown("- **โหมดมาตรฐาน (เกณฑ์ 57%+):** สมดุลระหว่างความถี่และความแม่นยำ")
+st.markdown("- **โหมดซุปเปอร์บู๊ (เกณฑ์ 52%+):** ออกไม้ง่าย ทำรอบไว เหมาะกับขอนตามมังกร")
+st.markdown("- **โหมดสไนเปอร์ (เกณฑ์ 62%+):** เน้นความชัวร์ระดับพรีเมียม กรองความเสี่ยงสูง")
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epi
