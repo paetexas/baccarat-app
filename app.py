@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import random
 
-st.set_page_config(page_title="BAR Rich BAR Pro Elite - Roadmap Sniper", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="BAR Rich BAR Pro Elite - Ultra Sniper", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
@@ -251,21 +251,21 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
     accuracy_rate = (correct_count / total_signals * 100) if total_signals > 0 else 0.0
     return curr_step, w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], losses, logs, accuracy_rate, total_signals
 
-st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [Roadmap Sniper V2]</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [Ultra Sniper 70%]</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
 
 st.markdown("### ปรับแต่งเกณฑ์ความคม (Sniper Settings)")
 
 strategy = st.radio(
     "เลือกโหมดการยิงตามเค้าไพ่:",
-    ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
+    ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดอัลตร้าสไนเปอร์ (เน้นชัวร์ขั้นเทพ เกณฑ์ 70%+)"],
     key="strategy_mode"
 )
 
 if "ซูปเปอร์บู๊" in strategy:
     base_threshold, min_rounds = 52.0, 6
-elif "สไนเปอร์" in strategy:
-    base_threshold, min_rounds = 62.0, 8
+elif "อัลตร้าสไนเปอร์" in strategy:
+    base_threshold, min_rounds = 70.0, 10
 else:
     base_threshold, min_rounds = 57.0, 8
 
@@ -414,22 +414,21 @@ curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs, accuracy_rate,
 st.markdown(f'<div class="step-badge">สถานะเดินเงิน (8 ไม้): [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
 
 if total_signals > 0:
-    st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status (Roadmap Engine):</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status (Ultra Sniper):</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
 
 res = analyze_engine(st.session_state.history, base_threshold, min_rounds)
 if res:
     if res["pat_name"]:
         st.success(f"ตรวจพบเค้าไพ่พิเศษ (Roadmap Pattern): **{res['pat_name']}**")
     if res["is_fusion_match"]:
-        st.markdown('<div class="kelly-card">**MATRIX FUSION ALERT:** เค้าไพ่หลักและตารางลูก (Big Eye / Small / Cockroach) สอดคล้องตรงกัน 100%!</div>', unsafe_allow_html=True)
+        st.markdown('<div class="kelly-card">**MATRIX FUSION ALERT:** เค้าไพ่หลักและตารางลูกสอดคล้องตรงกัน 100%!</div>', unsafe_allow_html=True)
 
     if res["action"] == "BANKER":
-        st.error(# Fixed escaping
-        f"### ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
+        st.error(f"### ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
     elif res["action"] == "PLAYER":
         st.info(f"### ฟันธงแทง PLAYER ({res['conf_p']:.1f}%)")
     else:
-        st.warning(f"### หลบเลี่ยง (SKIP) - ตลาดผันผวน / รอจังหวะเค้าไพ่คมๆ")
+        st.warning(f"### หลบเลี่ยง (SKIP) - เกณฑ์ความชัวร์ไม่ถึง 70% / รอจังหวะสวยๆ")
 
     m1, m2 = st.columns(2)
     with m1:
@@ -465,12 +464,12 @@ if detailed_logs:
     st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
 
 st.markdown("---")
-st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Roadmap Sniper V2]")
-st.markdown("#### 1. ระบบวิเคราะห์เค้าไพ่ตามตำราสากล (Roadmap Patterns)")
-st.markdown("- ทำงานโดยจำลองการอ่านตารางลูกย่อย (Big Eye Boy, Small Road, Cockroach Pig) ร่วมกับ Big Road เพื่อเช็กความต่อเนื่องและจุดหักมุมของเค้าไพ่")
-st.markdown("#### 2. Adaptive Feedback Loop (ระบบปรับตัวตามผลถูก/ผิด)")
-st.markdown("- ตรวจสอบสถานะความแม่นยำย้อนหลังแบบเรียลไทม์ หากช่วงไหนเค้าไพ่นิ่งตามสูตร ระบบจะช่วยดันความมั่นใจให้ออกไม้แม่นขึ้น แต่ถ้าช่วงไหนสลับหลอก (Choppy) ระบบจะสั่งหลบเลี่ยง (SKIP) อัตโนมัติ")
+st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Ultra Sniper 70%]")
+st.markdown("#### 1. โหมดอัลตร้าสไนเปอร์ (เกณฑ์ 70%+)")
+st.markdown("- ถูกออกแบบมาให้กรองความเสี่ยงสูง ออกไม้เฉพาะตาที่มั่นใจจริงๆ เท่านั้น (ต้องผ่านเกณฑ์ความน่าจะเป็นสูงถึง 70% ขึ้นไป)")
+st.markdown("#### 2. Adaptive Feedback Loop")
+st.markdown("- ปรับความมั่นใจแบบเรียลไทม์ตามผล ถูก/ผิด ย้อนหลัง ช่วยหลบเลี่ยงจังหวะขอนไพ่แกว่งโดยอัตโนมัติ")
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Roadmap Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-                 
+st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Ultra Sniper 70% • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+                
