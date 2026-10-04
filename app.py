@@ -458,7 +458,7 @@ with sc3:
 
 t1, t2, t3 = st.columns(3)
 with t1:
-    if st.button("↩️️ ย้อนกลับ", use_container_width=True):
+    if st.button("↩ ย้อนกลับ", use_container_width=True):
         if st.session_state.history: 
             st.session_state.history.pop()
             if st.session_state.spreads: st.session_state.spreads.pop()
@@ -531,4 +531,4 @@ st.write("**📈 สถิติการเข้าไม้ขอนปัจ
 col_a1, col_a2, col_a3, col_a4 = st.columns(4)
 with col_a1: st.metric("ไม้ 1", f"{w1}")
 with col_a2: st.metric("ไม้ 2", f"{w2}")
-with col_a3: st.metric("ไม
+with col_a3: st.metric("ไม้ 
