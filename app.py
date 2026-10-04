@@ -3,31 +3,112 @@ import numpy as np
 import pandas as pd
 import random
 
-st.set_page_config(page_title="BAR Rich BAR Pro Elite - Ultra Sniper", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="KAiTUN BCR PROMAX", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
-    .stApp { background-color: #0E1117; color: #E0E0E0; }
+    /* Global Styles & Futuristic Dark Theme */
+    .stApp { 
+        background: radial-gradient(circle at 50% 0%, #111827 0%, #0B0F19 100%); 
+        color: #F3F4F6; 
+        font-family: 'Inter', sans-serif;
+    }
     
+    /* Modern Glassmorphism Card Style */
+    .glass-card {
+        background: rgba(22, 27, 34, 0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        margin-bottom: 15px;
+    }
+
+    /* Custom Button Styling */
     div[data-testid="column"] button {
-        height: 3.2em !important; font-size: 13px !important;
-        font-weight: 800 !important; border-radius: 10px !important;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
-        color: white !important; border: none !important;
+        height: 3.4em !important; 
+        font-size: 13px !important;
+        font-weight: 800 !important; 
+        border-radius: 12px !important;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+        color: white !important; 
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        transition: all 0.3s ease;
+    }
+    div[data-testid="column"] button:hover {
+        transform: translateY(-2px);
+        border-color: #00E676 !important;
+        box-shadow: 0px 6px 20px rgba(0, 230, 118, 0.25);
     }
     
-    .stMetric { background: linear-gradient(145deg, #161B22, #1E2430); padding: 10px; border-radius: 12px; border: 1px solid #2D3748; }
-    .app-title { text-align: center; font-size: 26px; font-weight: 900; background: linear-gradient(90deg, #FFD700, #FF3D00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .creator-title { text-align: center; font-size: 13px; font-weight: 700; color: #00E676; margin-bottom: 2px; }
-    .step-badge { background: linear-gradient(135deg, #1A1F2C, #252D3D); border: 2px solid #FF3D00; border-radius: 14px; padding: 12px; text-align: center; font-size: 18px; font-weight: 800; color: #FF3D00; margin-bottom: 15px; }
-    .kelly-card { background: #1E222D; border-left: 5px solid #FFD700; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; }
-    .feedback-card { background: #16222A; border-left: 5px solid #00E676; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; }
-    .warning-banner {
-        background: rgba(255, 61, 0, 0.12); border: 1px solid #FFD700; color: #FF8A65;
-        text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 13px;
-        margin-top: 20px; margin-bottom: 10px;
+    /* Typography & Badges */
+    .app-title { 
+        text-align: center; 
+        font-size: 30px; 
+        font-weight: 900; 
+        background: linear-gradient(135deg, #FFD700 0%, #FF3D00 100%); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        letter-spacing: 1px;
+        margin-bottom: 0px;
     }
-    .footer-text { text-align: center; font-size: 11px; color: #666666; margin-top: 10px; }
+    .creator-title { 
+        text-align: center; 
+        font-size: 13px; 
+        font-weight: 700; 
+        color: #00E676; 
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    .step-badge { 
+        background: linear-gradient(135deg, rgba(26, 31, 44, 0.9), rgba(37, 45, 61, 0.9)); 
+        border: 2px solid #FF3D00; 
+        border-radius: 16px; 
+        padding: 14px; 
+        text-align: center; 
+        font-size: 18px; 
+        font-weight: 800; 
+        color: #FF3D00; 
+        margin-bottom: 15px;
+        box-shadow: 0 4px 20px rgba(255, 61, 0, 0.2);
+    }
+    .kelly-card { 
+        background: rgba(30, 34, 45, 0.85); 
+        border-left: 5px solid #FFD700; 
+        padding: 12px 18px; 
+        border-radius: 10px; 
+        margin-bottom: 15px; 
+        font-size: 14px;
+    }
+    .feedback-card { 
+        background: rgba(22, 34, 42, 0.85); 
+        border-left: 5px solid #00E676; 
+        padding: 12px 18px; 
+        border-radius: 10px; 
+        margin-bottom: 15px; 
+        font-size: 13px; 
+    }
+    .warning-banner {
+        background: rgba(255, 61, 0, 0.1); 
+        border: 1px solid rgba(255, 215, 0, 0.4); 
+        color: #FF8A65;
+        text-align: center; 
+        padding: 12px; 
+        border-radius: 12px; 
+        font-weight: 700; 
+        font-size: 13px;
+        margin-top: 25px; 
+        margin-bottom: 10px;
+    }
+    .footer-text { 
+        text-align: center; 
+        font-size: 11px; 
+        color: #888888; 
+        margin-top: 15px; 
+        letter-spacing: 0.5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -109,9 +190,9 @@ def derived_roads_engine(history):
     matrix = build_big_road(history)
     if len(matrix) < 4:
         return (0.5, 0.5), False
-    big_eye = get_derived_road_signal(matrix, 1)   # Big Eye Boy
-    small_road = get_derived_road_signal(matrix, 2) # Small Road
-    cockroach = get_derived_road_signal(matrix, 3)  # Cockroach Pig
+    big_eye = get_derived_road_signal(matrix, 1)   
+    small_road = get_derived_road_signal(matrix, 2) 
+    cockroach = get_derived_road_signal(matrix, 3)  
     
     score = big_eye + small_road + cockroach
     last_side = matrix[-1][0]
@@ -178,7 +259,6 @@ def analyze_engine(history_slice, base_threshold, min_rounds, recent_accuracy_bo
         if composite_b > composite_p: composite_b += 0.08
         else: composite_p += 0.08
         
-    # Adaptive Feedback Loop Integration
     composite_b += recent_accuracy_bonus
     composite_p -= recent_accuracy_bonus
     
@@ -251,16 +331,18 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
     accuracy_rate = (correct_count / total_signals * 100) if total_signals > 0 else 0.0
     return curr_step, w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], losses, logs, accuracy_rate, total_signals
 
-st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [Ultra Sniper 70%]</div>', unsafe_allow_html=True)
-st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+# App Header
+st.markdown('<div class="app-title">KAiTUN BCR PROMAX</div>', unsafe_allow_html=True)
+st.markdown('<div class="creator-title">Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
 
-st.markdown("### ปรับแต่งเกณฑ์ความคม (Sniper Settings)")
-
-strategy = st.radio(
-    "เลือกโหมดการยิงตามเค้าไพ่:",
-    ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดอัลตร้าสไนเปอร์ (เน้นชัวร์ขั้นเทพ เกณฑ์ 70%+)"],
-    key="strategy_mode"
-)
+# Strategy Selector Container
+with st.container():
+    st.markdown("### ⚡ ปรับแต่งเกณฑ์ความคม (Sniper Settings)")
+    strategy = st.radio(
+        "เลือกโหมดการยิงตามเค้าไพ่:",
+        ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดอัลตร้าสไนเปอร์ (เน้นชัวร์ขั้นเทพ เกณฑ์ 70%+)"],
+        key="strategy_mode"
+    )
 
 if "ซูปเปอร์บู๊" in strategy:
     base_threshold, min_rounds = 52.0, 6
@@ -271,83 +353,85 @@ else:
 
 st.divider()
 
-st.markdown("### ระบบนับไพ่ Hi-Lo & Point Spread Monitor")
-_, _, _, running_cnt = get_hilo_card_bias()
-m_col1, m_col2 = st.columns(2)
-with m_col1:
-    st.metric("ไพ่ที่ออกไปแล้ว", f"{st.session_state.total_cards} ใบ")
-with m_col2:
-    st.metric("True Count Index", f"{running_cnt:.2f}")
+# Hi-Lo Card Counting Container
+with st.container():
+    st.markdown("### 📊 ระบบนับไพ่ Hi-Lo & Point Spread Monitor")
+    _, _, _, running_cnt = get_hilo_card_bias()
+    m_col1, m_col2 = st.columns(2)
+    with m_col1:
+        st.metric("ไพ่ที่ออกไปแล้ว", f"{st.session_state.total_cards} ใบ")
+    with m_col2:
+        st.metric("True Count Index", f"{running_cnt:.2f}")
 
-st.caption("จิ้มกดหน้าไพ่ทุกใบที่เปิดบนโต๊ะ:")
-ca, cb, cc, cd, ce = st.columns(5)
-with ca:
-    if st.button("10/J/Q/K", use_container_width=True):
-        st.session_state.card_counts[0] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
-with cb:
-    if st.button("A", use_container_width=True):
-        st.session_state.card_counts[1] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
-with cc:
-    if st.button("2", use_container_width=True):
-        st.session_state.card_counts[2] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
-with cd:
-    if st.button("3", use_container_width=True):
-        st.session_state.card_counts[3] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
-with ce:
-    if st.button("4", use_container_width=True):
-        st.session_state.card_counts[4] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+    st.caption("จิ้มกดหน้าไพ่ทุกใบที่เปิดบนโต๊ะ:")
+    ca, cb, cc, cd, ce = st.columns(5)
+    with ca:
+        if st.button("10/J/Q/K", use_container_width=True):
+            st.session_state.card_counts[0] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
+    with cb:
+        if st.button("A", use_container_width=True):
+            st.session_state.card_counts[1] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
+    with cc:
+        if st.button("2", use_container_width=True):
+            st.session_state.card_counts[2] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
+    with cd:
+        if st.button("3", use_container_width=True):
+            st.session_state.card_counts[3] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
+    with ce:
+        if st.button("4", use_container_width=True):
+            st.session_state.card_counts[4] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
 
-cfa, cfb, cfc, cfd, cfe = st.columns(5)
-with cfa:
-    if st.button("5", use_container_width=True):
-        st.session_state.card_counts[5] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
-with cfb:
-    if st.button("6", use_container_width=True):
-        st.session_state.card_counts[6] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
-with cfc:
-    if st.button("7", use_container_width=True):
-        st.session_state.card_counts[7] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
-with cfd:
-    if st.button("8", use_container_width=True):
-        st.session_state.card_counts[8] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
-with cfe:
-    if st.button("9", use_container_width=True):
-        st.session_state.card_counts[9] += 1
-        st.session_state.total_cards += 1
-        st.rerun()
+    cfa, cfb, cfc, cfd, cfe = st.columns(5)
+    with cfa:
+        if st.button("5", use_container_width=True):
+            st.session_state.card_counts[5] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
+    with cfb:
+        if st.button("6", use_container_width=True):
+            st.session_state.card_counts[6] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
+    with cfc:
+        if st.button("7", use_container_width=True):
+            st.session_state.card_counts[7] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
+    with cfd:
+        if st.button("8", use_container_width=True):
+            st.session_state.card_counts[8] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
+    with cfe:
+        if st.button("9", use_container_width=True):
+            st.session_state.card_counts[9] += 1
+            st.session_state.total_cards += 1
+            st.rerun()
 
-if st.button("รีเซ็ตสำรับไพ่ทั้งหมด", use_container_width=True):
-    st.session_state.card_counts = {i: 0 for i in range(10)}
-    st.session_state.total_cards = 0
-    st.rerun()
+    if st.button("🔄 รีเซ็ตสำรับไพ่ทั้งหมด", use_container_width=True):
+        st.session_state.card_counts = {i: 0 for i in range(10)}
+        st.session_state.total_cards = 0
+        st.rerun()
 
 st.divider()
 
-st.markdown("### บันทึกผลจริงตาต่อตา")
-
+# Game Action Input Buttons
+st.markdown("### 🕹️ บันทึกผลจริงตาต่อตา")
 st.markdown("""
 <style>
-    div.element-container:has(#btn-player-marker) + div button { background-color: #1E88E5 !important; color: white !important; }
-    div.element-container:has(#btn-banker-marker) + div button { background-color: #E53935 !important; color: white !important; }
-    div.element-container:has(#btn-tie-marker) + div button { background-color: #43A047 !important; color: white !important; }
+    div.element-container:has(#btn-player-marker) + div button { background: linear-gradient(135deg, #1E88E5, #1565C0) !important; color: white !important; }
+    div.element-container:has(#btn-banker-marker) + div button { background: linear-gradient(135deg, #E53935, #C62828) !important; color: white !important; }
+    div.element-container:has(#btn-tie-marker) + div button { background: linear-gradient(135deg, #43A047, #2E7D32) !important; color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -374,20 +458,20 @@ with sc3:
 
 t1, t2, t3 = st.columns(3)
 with t1:
-    if st.button("ย้อนกลับ", use_container_width=True):
+    if st.button("↩️ ย้อนกลับ", use_container_width=True):
         if st.session_state.history: 
             st.session_state.history.pop()
             if st.session_state.spreads: st.session_state.spreads.pop()
             st.rerun()
 with t2:
-    if st.button("ล้างขอนนี้", use_container_width=True):
+    if st.button("🗑️ ล้างขอนนี้", use_container_width=True):
         st.session_state.history = []
         st.session_state.spreads = []
         st.session_state.card_counts = {i: 0 for i in range(10)}
         st.session_state.total_cards = 0
         st.rerun()
 with t3:
-    if st.button("บันทึกขอน", use_container_width=True):
+    if st.button("💾 บันทึกขอน", use_container_width=True):
         if len(st.session_state.history) >= min_rounds:
             curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses_val, _, acc_rate, _ = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
             st.session_state.shoe_logs.append({
@@ -410,25 +494,26 @@ if st.session_state.history:
 
 st.divider()
 
+# Core Calculation & Engine Output
 curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs, accuracy_rate, total_signals = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
 st.markdown(f'<div class="step-badge">สถานะเดินเงิน (8 ไม้): [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
 
 if total_signals > 0:
-    st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status (Ultra Sniper):</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status:</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
 
 res = analyze_engine(st.session_state.history, base_threshold, min_rounds)
 if res:
     if res["pat_name"]:
-        st.success(f"ตรวจพบเค้าไพ่พิเศษ (Roadmap Pattern): **{res['pat_name']}**")
+        st.success(f"🎯 ตรวจพบเค้าไพ่พิเศษ: **{res['pat_name']}**")
     if res["is_fusion_match"]:
-        st.markdown('<div class="kelly-card">**MATRIX FUSION ALERT:** เค้าไพ่หลักและตารางลูกสอดคล้องตรงกัน 100%!</div>', unsafe_allow_html=True)
+        st.markdown('<div class="kelly-card">**🔥 MATRIX FUSION ALERT:** เค้าไพ่หลักและตารางลูกสอดคล้องตรงกัน 100%!</div>', unsafe_allow_html=True)
 
     if res["action"] == "BANKER":
-        st.error(f"### ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
+        st.error(f"### 🛑 ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
     elif res["action"] == "PLAYER":
-        st.info(f"### ฟันธงแทง PLAYER ({res['conf_p']:.1f}%)")
+        st.info(f"### 🔵 ฟันธงแทง PLAYER ({res['conf_p']:.1f}%)")
     else:
-        st.warning(f"### หลบเลี่ยง (SKIP) - เกณฑ์ความชัวร์ไม่ถึง 70% / รอจังหวะสวยๆ")
+        st.warning(f"### ⏳ หลบเลี่ยง (SKIP) - เกณฑ์ความชัวร์ไม่ถึงเป้า / รอจังหวะสวยๆ")
 
     m1, m2 = st.columns(2)
     with m1:
@@ -437,39 +522,13 @@ if res:
         st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
 else:
     clean_count = len([x for x in st.session_state.history if x in ['B','P']])
-    st.info(f"กำลังสะสมข้อมูลเค้าไพ่: {clean_count}/{min_rounds} ตา")
+    st.info(f"⏳ กำลังสะสมข้อมูลเค้าไพ่: {clean_count}/{min_rounds} ตา")
 
 st.divider()
 
-st.write("**สถิติการเข้าไม้ขอนปัจจุบัน (8 ไม้):**")
+# Statistics Display
+st.write("**📈 สถิติการเข้าไม้ขอนปัจจุบัน (8 ไม้):**")
 col_a1, col_a2, col_a3, col_a4 = st.columns(4)
 with col_a1: st.metric("ไม้ 1", f"{w1}")
 with col_a2: st.metric("ไม้ 2", f"{w2}")
-with col_a3: st.metric("ไม้ 3", f"{w3}")
-with col_a4: st.metric("ไม้ 4", f"{w4}")
-
-col_b1, col_b2, col_b3, col_b4, col_b5 = st.columns(5)
-with col_b1: st.metric("ไม้ 5", f"{w5}")
-with col_b2: st.metric("ไม้ 6", f"{w6}")
-with col_b3: st.metric("ไม้ 7", f"{w7}")
-with col_b4: st.metric("ไม้ 8", f"{w8}")
-with col_b5: st.metric("แตก", f"{losses}")
-
-st.markdown("### ประวัติย้อนหลังหลายขอน")
-if st.session_state.shoe_logs:
-    st.dataframe(pd.DataFrame(st.session_state.shoe_logs), use_container_width=True)
-
-st.markdown("### ประวัติการเข้าไม้ตาต่อตา (พร้อมผล ถูก/ผิด)")
-if detailed_logs:
-    st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
-
-st.markdown("---")
-st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Ultra Sniper 70%]")
-st.markdown("#### 1. โหมดอัลตร้าสไนเปอร์ (เกณฑ์ 70%+)")
-st.markdown("- ถูกออกแบบมาให้กรองความเสี่ยงสูง ออกไม้เฉพาะตาที่มั่นใจจริงๆ เท่านั้น (ต้องผ่านเกณฑ์ความน่าจะเป็นสูงถึง 70% ขึ้นไป)")
-st.markdown("#### 2. Adaptive Feedback Loop")
-st.markdown("- ปรับความมั่นใจแบบเรียลไทม์ตามผล ถูก/ผิด ย้อนหลัง ช่วยหลบเลี่ยงจังหวะขอนไพ่แกว่งโดยอัตโนมัติ")
-
-st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Ultra Sniper 70% • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-            
+with col_a3: st.metric("ไม้
