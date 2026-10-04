@@ -153,7 +153,6 @@ def get_hilo_card_bias():
     card_concentration_bias = (true_count * 0.012) + spread_boost
     return max(-0.09, min(0.09, -card_concentration_bias)), max(-0.09, min(0.09, card_concentration_bias)), true_count, running_count
 
-# ฟังก์ชันประเมินผลพร้อมระบบ Feedback ปรับน้ำหนักตามความแม่นยำย้อนหลัง (Adaptive Feedback Loop)
 def analyze_engine(history_slice, base_threshold, min_rounds, recent_accuracy_bonus=0.0):
     clean = [x for x in history_slice if x in ['B', 'P']]
     if len(clean) < min_rounds:
@@ -179,7 +178,6 @@ def analyze_engine(history_slice, base_threshold, min_rounds, recent_accuracy_bo
         if composite_b > composite_p: composite_b += 0.08
         else: composite_p += 0.08
         
-    # นำผลลัพธ์ความถูกต้องย้อนหลังมาปรับจูน (Feedback Loop Injection)
     composite_b += recent_accuracy_bonus
     composite_p -= recent_accuracy_bonus
     
@@ -210,7 +208,6 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
     correct_count = 0
     total_signals = 0
     
-    # คำนวณแบบย้อนหลังเพื่อหาความแม่นยำระยะสั้นมาป้อนกลับ (Feedback Loop)
     recent_accuracy_bonus = 0.0
     
     for i in range(min_rounds, len(history)):
@@ -218,7 +215,6 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
         if actual_result not in ['B', 'P']:
             continue
         
-        # ประเมินโดยใช้ค่าโบนัสสะสมจากรอบก่อนหน้า
         past_signal = analyze_engine(history[:i], target_threshold, min_rounds, recent_accuracy_bonus)
         if past_signal and past_signal["action"] in ["BANKER", "PLAYER"]:
             pred = past_signal["action"]
@@ -237,13 +233,12 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
                 else:
                     curr_step += 1
             
-            # คำนวณอัตราความถูกต้อง 5ตาล่าสุด เพื่อปรับ Feedback Loop ทันที
             if total_signals >= 3:
                 recent_acc = correct_count / total_signals
                 if recent_acc >= 0.65:
-                    recent_accuracy_bonus = 0.04  # ถ้าช่วงนี้แม่น ดันความมั่นใจสูตรเพิ่ม
+                    recent_accuracy_bonus = 0.04
                 elif recent_acc <= 0.35:
-                    recent_accuracy_bonus = -0.04 # ถ้าช่วงนี้แกว่ง/ผิดบ่อย ถอนความมั่นใจให้ระวังตัวขึ้น (SKIP ถี่ขึ้น)
+                    recent_accuracy_bonus = -0.04
                 else:
                     recent_accuracy_bonus = 0.0
 
@@ -417,7 +412,6 @@ st.divider()
 curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs, accuracy_rate, total_signals = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
 st.markdown(f'<div class="step-badge">สถานะเดินเงิน (8 ไม้): [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
 
-# แสดงผล Feedback สะท้อนสถานะความแม่นยำเรียลไทม์
 if total_signals > 0:
     st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status:</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
 
@@ -470,15 +464,10 @@ if detailed_logs:
 
 st.markdown("---")
 st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Sniper V2]")
-
 st.markdown("#### 1. ระบบ Adaptive Feedback Loop (วิเคราะห์ผลถูก-ผิด)")
-st.markdown("- ระบบจะคอยเช็กผลการทำนายย้อนหลังตาต่อตาโดยอัตโนมัติ และแสดงค่า **ความแม่นยำ (Accuracy Rate)** เรียลไทม์")
-st.markdown("- หากช่วงไหนสูตรเข้าเป้าต่อเนื่อง ระบบจะเพิ่มความมั่นใจให้ออกไม้ง่ายขึ้น แต่ถ้าช่วงไหนขอนไพ่เริ่มแกว่งและทายผิด ระบบจะปรับลดความมั่นใจลงอัตโนมัติ (บังคับหลบเลี่ยงหรือ SKIP เพื่อเซฟทุน)")
-
+st.markdown("- ระบบจะคอยเช็กผลการทำนายย้อนหลังตาต่อตาโดยอัตโนมัติ และแสดงค่าความแม่นยำเรียลไทม์")
 st.markdown("#### 2. การเลือกโหมดการยิง (Sniper Settings)")
-st.markdown("- **โหมดมาตรฐาน (เกณฑ์ 57%+):** สมดุลระหว่างความถี่และความแม่นยำ")
-st.markdown("- **โหมดซุปเปอร์บู๊ (เกณฑ์ 52%+):** ออกไม้ง่าย ทำรอบไว เหมาะกับขอนตามมังกร")
-st.markdown("- **โหมดสไนเปอร์ (เกณฑ์ 62%+):** เน้นความชัวร์ระดับพรีเมียม กรองความเสี่ยงสูง")
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epi
+st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+    
