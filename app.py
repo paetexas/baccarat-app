@@ -196,9 +196,11 @@ def analyze_engine(history_slice, base_threshold, min_rounds):
         "is_fusion_match": is_fusion_match, "true_count": true_count
     }
 
-def evaluate_martingale_4steps(history, target_threshold, min_rounds):
+# ขยายระบบเดินเงินเป็น 8 ไม้
+def evaluate_martingale_8steps(history, target_threshold, min_rounds):
     curr_step = 1
-    w1, w2, w3, w4, losses = 0, 0, 0, 0, 0
+    w = [0] * 9  # Index 1 ถึง 8 สำหรับเก็บสถิติไม้ 1-8
+    losses = 0
     logs = []
     
     for i in range(min_rounds, len(history)):
@@ -217,19 +219,17 @@ def evaluate_martingale_4steps(history, target_threshold, min_rounds):
             })
             
             if is_win:
-                if curr_step == 1: w1 += 1
-                elif curr_step == 2: w2 += 1
-                elif curr_step == 3: w3 += 1
-                elif curr_step >= 4: w4 += 1
+                if 1 <= curr_step <= 8:
+                    w[curr_step] += 1
                 curr_step = 1
             else:
-                if curr_step >= 4:
+                if curr_step >= 8:
                     losses += 1
                     curr_step = 1
                 else:
                     curr_step += 1
                     
-    return curr_step, w1, w2, w3, w4, losses, logs
+    return curr_step, w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], losses, logs
 
 st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [SNIPER V2]</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
@@ -336,7 +336,6 @@ with sc1:
     st.markdown('<div id="btn-player-marker"></div>', unsafe_allow_html=True)
     if st.button("PLAYER ชนะ", use_container_width=True, key="btn_player"):
         st.session_state.history.append('P')
-        # คำนวณแต้มห่างอัตโนมัติเบื้องหลัง (อิงตามความน่าจะเป็นจริงของบาคาร่า 1-9 แต้ม)
         auto_spread = random.choices([1, 2, 3, 4, 5, 6, 7, 8, 9], weights=[30, 25, 15, 10, 8, 5, 4, 2, 1])[0]
         st.session_state.spreads.append(auto_spread)
         st.rerun()
@@ -344,7 +343,6 @@ with sc2:
     st.markdown('<div id="btn-banker-marker"></div>', unsafe_allow_html=True)
     if st.button("BANKER ชนะ", use_container_width=True, key="btn_banker"):
         st.session_state.history.append('B')
-        # คำนวณแต้มห่างอัตโนมัติเบื้องหลัง
         auto_spread = random.choices([1, 2, 3, 4, 5, 6, 7, 8, 9], weights=[30, 25, 15, 10, 8, 5, 4, 2, 1])[0]
         st.session_state.spreads.append(auto_spread)
         st.rerun()
@@ -371,11 +369,12 @@ with t2:
 with t3:
     if st.button("บันทึกขอน", use_container_width=True):
         if len(st.session_state.history) >= min_rounds:
-            curr_step, w1_val, w2_val, w3_val, w4_val, losses_val, _ = evaluate_martingale_4steps(st.session_state.history, base_threshold, min_rounds)
+            curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses_val, _ = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
             st.session_state.shoe_logs.append({
                 "ขอนที่": f"ขอน #{st.session_state.shoe_count}",
                 "จำนวนตา": len(st.session_state.history),
-                "ไม้ 1": w1_val, "ไม้ 2": w2_val, "ไม้ 3": w3_val, "ไม้ 4": w4_val, "แตก": losses_val
+                "ไม้ 1": w1, "ไม้ 2": w2, "ไม้ 3": w3, "ไม้ 4": w4,
+                "ไม้ 5": w5, "ไม้ 6": w6, "ไม้ 7": w7, "ไม้ 8": w8, "แตก": losses_val
             })
             st.session_state.shoe_count += 1
             st.session_state.history = []
@@ -390,8 +389,8 @@ if st.session_state.history:
 
 st.divider()
 
-curr_step, w1, w2, w3, w4, losses, detailed_logs = evaluate_martingale_4steps(st.session_state.history, base_threshold, min_rounds)
-st.markdown(f'<div class="step-badge">สถานะเดินเงิน: [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
+curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
+st.markdown(f'<div class="step-badge">สถานะเดินเงิน (8 ไม้): [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
 
 res = analyze_engine(st.session_state.history, base_threshold, min_rounds)
 if res:
@@ -418,13 +417,20 @@ else:
 
 st.divider()
 
-st.write("**สถิติการเข้าไม้ขอนปัจจุบัน:**")
-s1, s2, s3, s4, s5 = st.columns(5)
-with s1: st.metric("ไม้ 1", f"{w1}")
-with s2: st.metric("ไม้ 2", f"{w2}")
-with s3: st.metric("ไม้ 3", f"{w3}")
-with s4: st.metric("ไม้ 4", f"{w4}")
-with s5: st.metric("แตก", f"{losses}")
+st.write("**สถิติการเข้าไม้ขอนปัจจุบัน (8 ไม้):**")
+# แบ่งแสดงผลเป็น 2 แถวเพื่อให้หน้าจอไม่แน่นเกินไปบนมือถือ
+col_a1, col_a2, col_a3, col_a4 = st.columns(4)
+with col_a1: st.metric("ไม้ 1", f"{w1}")
+with col_a2: st.metric("ไม้ 2", f"{w2}")
+with col_a3: st.metric("ไม้ 3", f"{w3}")
+with col_a4: st.metric("ไม้ 4", f"{w4}")
+
+col_b1, col_b2, col_b3, col_b4, col_b5 = st.columns(5)
+with col_b1: st.metric("ไม้ 5", f"{w5}")
+with col_b2: st.metric("ไม้ 6", f"{w6}")
+with col_b3: st.metric("ไม้ 7", f"{w7}")
+with col_b4: st.metric("ไม้ 8", f"{w8}")
+with col_b5: st.metric("แตก", f"{losses}")
 
 st.markdown("### ประวัติย้อนหลังหลายขอน")
 if st.session_state.shoe_logs:
@@ -446,9 +452,9 @@ st.markdown("#### 2. ระบบนับไพ่ Hi-Lo & Point Spread")
 st.markdown("- เมื่อเปิดไพ่บนโต๊ะ ให้จิ้มเลือกหน้าไพ่ที่ออก ระบบจะคำนวณค่า True Count แบบเรียลไทม์")
 st.markdown("- **ระบบแต้มห่าง (Point Spread)** จะทำงานคำนวณให้อัตโนมัติเบื้องหลังทันทีทุกครั้งที่คุณกดผลแพ้ชนะ โดยไม่ต้องกดเลือกเอง")
 
-st.markdown("#### 3. การบันทึกผล & การใช้งานระบบเดินเงิน")
+st.markdown("#### 3. การบันทึกผล & การใช้งานระบบเดินเงิน (8 ไม้)")
 st.markdown("- กดปุ่ม **PLAYER ชนะ** หรือ **BANKER ชนะ** ตามผลจริงบนโต๊ะได้ทันที")
-st.markdown("- ดูสถานะเดินเงิน **[ ไม้ที่ 1 ถึง ไม้ที่ 4 ]** เพื่อคุมทุนตามระบบพับทบ (Martingale)")
+st.markdown("- ดูสถานะเดินเงินขยายขีดความสามารถ **[ ไม้ที่ 1 ถึง ไม้ที่ 8 ]** เพื่อคุมทุนตามระบบพับทบยาวๆ รองรับเค้าไพ่ลากยาวได้อย่างแม่นยำ")
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
