@@ -21,14 +21,20 @@ st.markdown("""
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         margin-bottom: 15px;
     }
+    /* ปรับแต่งปุ่มกดทั่วไปให้มีสีสันและโดดเด่น */
     div[data-testid="column"] button {
         height: 3.4em !important; 
         font-size: 13px !important;
         font-weight: 800 !important; 
         border-radius: 12px !important;
-        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
-        color: white !important; 
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
+        color: #FFFFFF !important; 
+        background: linear-gradient(135deg, #1F2937 0%, #374151 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    div[data-testid="column"] button:hover {
+        background: linear-gradient(135deg, #374151 0%, #4B5563 100%) !important;
+        border-color: #FF3D00 !important;
     }
     .app-title { 
         text-align: center; font-size: 30px; font-weight: 900; 
@@ -216,18 +222,18 @@ with st.container():
     cols = st.columns(5)
     for idx, c in enumerate(cards[:5]):
         with cols[idx]:
-            if st.button(c, use_container_width=True):
+            if st.button(c, use_container_width=True, key=f"card_{idx}"):
                 st.session_state.card_counts[idx if idx > 0 else 0] += 1
                 st.session_state.total_cards += 1
                 st.rerun()
     cols2 = st.columns(5)
     for idx, c in enumerate(cards[5:]):
         with cols2[idx]:
-            if st.button(c, use_container_width=True):
+            if st.button(c, use_container_width=True, key=f"card_{idx+5}"):
                 st.session_state.card_counts[idx + 5] += 1
                 st.session_state.total_cards += 1
                 st.rerun()
-    if st.button("🔄 รีเซ็ตสำรับไพ่", use_container_width=True):
+    if st.button("🔄 รีเซ็ตสำรับไพ่", use_container_width=True, key="reset_deck"):
         st.session_state.card_counts = {i: 0 for i in range(10)}
         st.session_state.total_cards = 0
         st.rerun()
@@ -237,34 +243,34 @@ st.divider()
 st.markdown("### 🕹️ บันทึกผลจริงตาต่อตา")
 sc1, sc2, sc3 = st.columns(3)
 with sc1:
-    if st.button("PLAYER ชนะ", use_container_width=True):
+    if st.button("PLAYER ชนะ", use_container_width=True, key="btn_p"):
         st.session_state.history.append('P')
         st.session_state.spreads.append(random.choice([1, 2, 3, 4, 5]))
         st.rerun()
 with sc2:
-    if st.button("BANKER ชนะ", use_container_width=True):
+    if st.button("BANKER ชนะ", use_container_width=True, key="btn_b"):
         st.session_state.history.append('B')
         st.session_state.spreads.append(random.choice([1, 2, 3, 4, 5]))
         st.rerun()
 with sc3:
-    if st.button("TIE เสมอ", use_container_width=True):
+    if st.button("TIE เสมอ", use_container_width=True, key="btn_t"):
         st.session_state.history.append('T')
         st.rerun()
 
 t1, t2, t3 = st.columns(3)
 with t1:
-    if st.button("↩ ย้อนกลับ", use_container_width=True) and st.session_state.history:
+    if st.button("↩ ย้อนกลับ", use_container_width=True, key="btn_undo") and st.session_state.history:
         st.session_state.history.pop()
         if st.session_state.spreads: st.session_state.spreads.pop()
         st.rerun()
 with t2:
-    if st.button("🗑️ ล้างขอน", use_container_width=True):
+    if st.button("🗑️ ล้างขอน", use_container_width=True, key="btn_clear"):
         st.session_state.history, st.session_state.spreads = [], []
         st.session_state.card_counts = {i: 0 for i in range(10)}
         st.session_state.total_cards = 0
         st.rerun()
 with t3:
-    if st.button("💾 บันทึกขอน", use_container_width=True) and len(st.session_state.history) >= min_rounds:
+    if st.button("💾 บันทึกขอน", use_container_width=True, key="btn_save") and len(st.session_state.history) >= min_rounds:
         curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses_val, _, acc_rate, _ = evaluate_martingale_8steps(st.session_state.history, base_threshold, min_rounds)
         st.session_state.shoe_logs.append({"ขอน": f"#{st.session_state.shoe_count}", "ตา": len(st.session_state.history), "แม่นยำ": f"{acc_rate:.1f}%", "แตก": losses_val})
         st.session_state.shoe_count += 1
@@ -322,4 +328,4 @@ if detailed_logs:
     st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัยทางสถิติเท่านั้น</div>', unsafe_allow_html=True)
-        
+    
