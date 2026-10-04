@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import random
 
-st.set_page_config(page_title="BAR Rich BAR Pro Elite", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="BAR Rich BAR Pro Elite - Roadmap Sniper", layout="centered", initial_sidebar_state="collapsed")
 
 st.markdown("""
 <style>
@@ -75,17 +75,17 @@ def match_special_patterns(clean_history):
     last5 = clean_history[-5:] if len(clean_history) >= 5 else []
     
     if last5 == ['P', 'B', 'P', 'B', 'P']:
-        return "ปิงปองยาว", 0.15, 0.85
+        return "ปิงปองยาว (Ping Pong)", 0.15, 0.85
     if last5 == ['B', 'P', 'B', 'P', 'B']:
-        return "ปิงปองยาว", 0.85, 0.15
+        return "ปิงปองยาว (Ping Pong)", 0.85, 0.15
     if last4 == ['B', 'B', 'B', 'B']:
-        return "มังกรแดงเดือด", 0.88, 0.12
+        return "มังกรแดงเดือด (Banker Dragon)", 0.88, 0.12
     if last4 == ['P', 'P', 'P', 'P']:
-        return "มังกรน้ำเงินเดือด", 0.12, 0.88
+        return "มังกรน้ำเงินเดือด (Player Dragon)", 0.12, 0.88
     if last4 == ['B', 'B', 'P', 'P']:
-        return "สองตัดคมๆ", 0.80, 0.20
+        return "สองตัดคมๆ (Two-Chop Pattern)", 0.80, 0.20
     if last4 == ['P', 'P', 'B', 'B']:
-        return "สองตัดคมๆ", 0.20, 0.80
+        return "สองตัดคมๆ (Two-Chop Pattern)", 0.20, 0.80
     return None, 0.5, 0.5
 
 def get_derived_road_signal(matrix, offset):
@@ -109,9 +109,9 @@ def derived_roads_engine(history):
     matrix = build_big_road(history)
     if len(matrix) < 4:
         return (0.5, 0.5), False
-    big_eye = get_derived_road_signal(matrix, 1)   
-    small_road = get_derived_road_signal(matrix, 2) 
-    cockroach = get_derived_road_signal(matrix, 3)  
+    big_eye = get_derived_road_signal(matrix, 1)   # Big Eye Boy
+    small_road = get_derived_road_signal(matrix, 2) # Small Road
+    cockroach = get_derived_road_signal(matrix, 3)  # Cockroach Pig
     
     score = big_eye + small_road + cockroach
     last_side = matrix[-1][0]
@@ -178,6 +178,7 @@ def analyze_engine(history_slice, base_threshold, min_rounds, recent_accuracy_bo
         if composite_b > composite_p: composite_b += 0.08
         else: composite_p += 0.08
         
+    # Adaptive Feedback Loop Integration
     composite_b += recent_accuracy_bonus
     composite_p -= recent_accuracy_bonus
     
@@ -250,13 +251,13 @@ def evaluate_martingale_8steps(history, target_threshold, min_rounds):
     accuracy_rate = (correct_count / total_signals * 100) if total_signals > 0 else 0.0
     return curr_step, w[1], w[2], w[3], w[4], w[5], w[6], w[7], w[8], losses, logs, accuracy_rate, total_signals
 
-st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [SNIPER V2]</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-title">BAR Rich BAR Pro Elite [Roadmap Sniper V2]</div>', unsafe_allow_html=True)
 st.markdown('<div class="creator-title">KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
 
 st.markdown("### ปรับแต่งเกณฑ์ความคม (Sniper Settings)")
 
 strategy = st.radio(
-    "เลือกโหมดการยิง:",
+    "เลือกโหมดการยิงตามเค้าไพ่:",
     ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดสไนเปอร์ (เน้นชัวร์ๆ เกณฑ์ 62%+)"],
     key="strategy_mode"
 )
@@ -413,21 +414,22 @@ curr_step, w1, w2, w3, w4, w5, w6, w7, w8, losses, detailed_logs, accuracy_rate,
 st.markdown(f'<div class="step-badge">สถานะเดินเงิน (8 ไม้): [ ไม้ที่ {curr_step} ]</div>', unsafe_allow_html=True)
 
 if total_signals > 0:
-    st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status:</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="feedback-card"><b>Adaptive Feedback Status (Roadmap Engine):</b> วิเคราะห์สัญญาณทั้งหมด {total_signals} ตา | ความแม่นยำปัจจุบัน: <b>{accuracy_rate:.1f}%</b></div>', unsafe_allow_html=True)
 
 res = analyze_engine(st.session_state.history, base_threshold, min_rounds)
 if res:
     if res["pat_name"]:
-        st.success(f"ตรวจพบเค้าไพ่พิเศษ: **{res['pat_name']}**")
+        st.success(f"ตรวจพบเค้าไพ่พิเศษ (Roadmap Pattern): **{res['pat_name']}**")
     if res["is_fusion_match"]:
-        st.markdown('<div class="kelly-card">**MATRIX FUSION ALERT:** ตารางหลักและตารางลูกพุ่งตรงกัน!</div>', unsafe_allow_html=True)
+        st.markdown('<div class="kelly-card">**MATRIX FUSION ALERT:** เค้าไพ่หลักและตารางลูก (Big Eye / Small / Cockroach) สอดคล้องตรงกัน 100%!</div>', unsafe_allow_html=True)
 
     if res["action"] == "BANKER":
-        st.error(f"### ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
+        st.error(# Fixed escaping
+        f"### ฟันธงแทง BANKER ({res['conf_b']:.1f}%)")
     elif res["action"] == "PLAYER":
         st.info(f"### ฟันธงแทง PLAYER ({res['conf_p']:.1f}%)")
     else:
-        st.warning(f"### หลบเลี่ยง (SKIP) - รอจังหวะคมๆ")
+        st.warning(f"### หลบเลี่ยง (SKIP) - ตลาดผันผวน / รอจังหวะเค้าไพ่คมๆ")
 
     m1, m2 = st.columns(2)
     with m1:
@@ -436,7 +438,7 @@ if res:
         st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
 else:
     clean_count = len([x for x in st.session_state.history if x in ['B','P']])
-    st.info(f"กำลังสะสมข้อมูล: {clean_count}/{min_rounds} ตา")
+    st.info(f"กำลังสะสมข้อมูลเค้าไพ่: {clean_count}/{min_rounds} ตา")
 
 st.divider()
 
@@ -463,11 +465,12 @@ if detailed_logs:
     st.dataframe(pd.DataFrame(detailed_logs), use_container_width=True)
 
 st.markdown("---")
-st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Sniper V2]")
-st.markdown("#### 1. ระบบ Adaptive Feedback Loop (วิเคราะห์ผลถูก-ผิด)")
-st.markdown("- ระบบจะคอยเช็กผลการทำนายย้อนหลังตาต่อตาโดยอัตโนมัติ และแสดงค่าความแม่นยำเรียลไทม์")
-st.markdown("#### 2. การเลือกโหมดการยิง (Sniper Settings)")
+st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [BAR Rich BAR Pro Elite Roadmap Sniper V2]")
+st.markdown("#### 1. ระบบวิเคราะห์เค้าไพ่ตามตำราสากล (Roadmap Patterns)")
+st.markdown("- ทำงานโดยจำลองการอ่านตารางลูกย่อย (Big Eye Boy, Small Road, Cockroach Pig) ร่วมกับ Big Road เพื่อเช็กความต่อเนื่องและจุดหักมุมของเค้าไพ่")
+st.markdown("#### 2. Adaptive Feedback Loop (ระบบปรับตัวตามผลถูก/ผิด)")
+st.markdown("- ตรวจสอบสถานะความแม่นยำย้อนหลังแบบเรียลไทม์ หากช่วงไหนเค้าไพ่นิ่งตามสูตร ระบบจะช่วยดันความมั่นใจให้ออกไม้แม่นขึ้น แต่ถ้าช่วงไหนสลับหลอก (Choppy) ระบบจะสั่งหลบเลี่ยง (SKIP) อัตโนมัติ")
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
-st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
-    
+st.markdown('<div class="footer-text">BAR Rich BAR Pro Elite Roadmap Sniper V2 • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+                 
