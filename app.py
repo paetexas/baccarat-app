@@ -9,7 +9,7 @@ st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
     
-    /* บังคับสีปุ่มกดทั้งหมดให้เป็นแบบไล่ระดับและมีสีสัน */
+    /* ตกแต่งปุ่มกดทั้งหมดให้มีสีสันและสวยงาม */
     div.stButton > button {
         width: 100%;
         height: 3.2em !important;
@@ -249,8 +249,10 @@ def analyze_engine(history_slice, base_threshold, min_rounds, recent_accuracy_bo
         composite_p = (p_p_base * 0.05) + (p_p_mk * 0.45) + (p_p_dr * 0.40) + p_bias_card
         
     if is_fusion_match:
-        if composite_b > composite_p: composite_b += 0.08
-        else: composite_p += 0.08
+        if composite_b > composite_p: 
+            composite_b += 0.08
+        else: 
+            composite_p += 0.08
         
     composite_b += recent_accuracy_bonus
     composite_p -= recent_accuracy_bonus
@@ -476,6 +478,4 @@ if res:
     with m1:
         st.metric("Player Prob", f"{res['conf_p']:.1f}%", f"EV: {res['ev_p']:.2f}")
     with m2:
-        st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
-else:
-   
+        st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.
