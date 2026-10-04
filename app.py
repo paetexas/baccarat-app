@@ -9,11 +9,21 @@ st.markdown("""
 <style>
     .stApp { background-color: #0E1117; color: #E0E0E0; }
     
-    div[data-testid="column"] button {
-        height: 3.2em !important; font-size: 13px !important;
-        font-weight: 800 !important; border-radius: 10px !important;
+    /* บังคับสีปุ่มกดทั้งหมดให้เป็นแบบไล่ระดับและมีสีสัน */
+    div.stButton > button {
+        width: 100%;
+        height: 3.2em !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        border-radius: 10px !important;
+        background: linear-gradient(135deg, #1F2937, #111827) !important;
+        color: white !important;
+        border: 1px solid #374151 !important;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4);
-        color: white !important; border: none !important;
+    }
+    div.stButton > button:hover {
+        background: linear-gradient(135deg, #374151, #1F2937) !important;
+        border-color: #FF3D00 !important;
     }
     
     .stMetric { background: linear-gradient(145deg, #161B22, #1E2430); padding: 10px; border-radius: 12px; border: 1px solid #2D3748; }
@@ -468,13 +478,4 @@ if res:
     with m2:
         st.metric("Banker Prob", f"{res['conf_b']:.1f}%", f"EV: {res['ev_b']:.2f}")
 else:
-    st.info(f"กำลังสะสมข้อมูลเค้าไพ่: {len(clean_history_eval)}/{min_rounds} ตา")
-
-st.divider()
-
-st.write("**สถิติการเข้าไม้ขอนปัจจุบัน (8 ไม้):**")
-col_a1, col_a2, col_a3, col_a4 = st.columns(4)
-with col_a1: st.metric("ไม้ 1", f"{w1}")
-with col_a2: st.metric("ไม้ 2", f"{w2}")
-with col_a3: st.metric("ไม้ 3", f"{w3}")
-with col_a4: st.metri
+   
