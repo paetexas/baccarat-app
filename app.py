@@ -257,7 +257,7 @@ st.markdown("### ปรับแต่งเกณฑ์ความคม (Snip
 
 strategy = st.radio(
     "เลือกโหมดการยิงตามเค้าไพ่:",
-    ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 57%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดอัลตร้าสไนเปอร์ (เน้นชัวร์ขั้นเทพ เกณฑ์ 70%+)"],
+    ["โหมดมาตรฐาน (สมดุล คมๆ เกณฑ์ 67%+)", "โหมดซูปเปอร์บู๊ (ออกไม้ถี่ รัวๆ เกณฑ์ 52%+)", "โหมดอัลตร้าสไนเปอร์ (เน้นชัวร์ขั้นเทพ เกณฑ์ 70%+)"],
     key="strategy_mode"
 )
 
@@ -266,7 +266,7 @@ if "ซูปเปอร์บู๊" in strategy:
 elif "อัลตร้าสไนเปอร์" in strategy:
     base_threshold, min_rounds = 70.0, 10
 else:
-    base_threshold, min_rounds = 57.0, 8
+    base_threshold, min_rounds = 67.0, 8
 
 st.divider()
 
@@ -465,9 +465,10 @@ if detailed_logs:
 st.markdown("---")
 st.markdown("### 📖 คู่มือการใช้งานเชิงลึก [KAiTUN BCR PROMAX]")
 st.markdown("#### 1. โหมดการยิงตามเค้าไพ่")
-st.markdown("- ปรับเปลี่ยนเกณฑ์ความแม่นยำได้ตามความต้องการ (มาตรฐาน, ซุปเปอร์บู๊, อัลตร้าสไนเปอร์)")
+st.markdown("- ปรับเปลี่ยนเกณฑ์ความแม่นยำได้ตามความต้องการ (มาตรฐาน 67%, ซุปเปอร์บู๊ 52%, อัลตร้าสไนเปอร์ 70%)")
 st.markdown("#### 2. Adaptive Feedback Loop")
 st.markdown("- ปรับความมั่นใจแบบเรียลไทม์ตามผล ถูก/ผิด ย้อนหลัง ช่วยหลบเลี่ยงจังหวะขอนไพ่แกว่งโดยอัตโนมัติ")
 
 st.markdown('<div class="warning-banner">โปรแกรมเพื่อการวิจัย ไม่สนับสนุนการพนัน</div>', unsafe_allow_html=True)
 st.markdown('<div class="footer-text">KAiTUN BCR PROMAX • Created by KAiTUN888 By.Epic</div>', unsafe_allow_html=True)
+    
